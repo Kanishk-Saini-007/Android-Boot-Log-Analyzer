@@ -1,0 +1,85 @@
+{
+  "tool": "android-boot-log-analyzer",
+  "input": "sample_logs/boot_fixed.log",
+  "summary": {
+    "issues_detected": 0,
+    "total_boot_time_seconds": 24.01,
+    "counts_by_severity": {
+      "CRITICAL": 0,
+      "ERROR": 0,
+      "WARNING": 0
+    },
+    "counts_by_category": {},
+    "boot_health_score": 90,
+    "boot_health_grade": "Excellent",
+    "score_breakdown": [
+      "2 x slow stage (-5 each, capped) = -10"
+    ]
+  },
+  "boot_timing": {
+    "duration_seconds": 24.01,
+    "note": "",
+    "stages": [
+      {
+        "name": "kernel_start",
+        "start": 0.0,
+        "end": 2.104533,
+        "duration": 2.105,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "kernel_init_done",
+        "start": 2.104533,
+        "end": 2.109001,
+        "duration": 0.004,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "init",
+        "start": 2.109001,
+        "end": 2.450112,
+        "duration": 0.341,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "selinux_setup",
+        "start": 2.450112,
+        "end": 11.330041,
+        "duration": 8.88,
+        "slow": true,
+        "note": "took 8.9s (37% of boot)"
+      },
+      {
+        "name": "core_services",
+        "start": 11.330041,
+        "end": 21.700122,
+        "duration": 10.37,
+        "slow": true,
+        "note": "took 10.4s (43% of boot)"
+      },
+      {
+        "name": "boot_animation",
+        "start": 21.700122,
+        "end": 24.010223,
+        "duration": 2.31,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "boot_complete",
+        "start": 24.010223,
+        "end": 24.010223,
+        "duration": 0.0,
+        "slow": false,
+        "note": ""
+      }
+    ]
+  },
+  "issues": [],
+  "recommendations": [
+    "Investigate slow boot stages: selinux_setup (8.9s), core_services (10.4s)"
+  ]
+}
