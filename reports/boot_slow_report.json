@@ -1,0 +1,152 @@
+{
+  "tool": "android-boot-log-analyzer",
+  "input": "sample_logs/boot_slow.log",
+  "summary": {
+    "issues_detected": 4,
+    "total_boot_time_seconds": 42.0,
+    "counts_by_severity": {
+      "CRITICAL": 0,
+      "ERROR": 0,
+      "WARNING": 4
+    },
+    "counts_by_category": {
+      "other": 3,
+      "driver": 1
+    },
+    "boot_health_score": 78,
+    "boot_health_grade": "Good",
+    "score_breakdown": [
+      "4 x WARNING (-3 each) = -12",
+      "2 x slow stage (-5 each, capped) = -10"
+    ]
+  },
+  "boot_timing": {
+    "duration_seconds": 42.0,
+    "note": "",
+    "stages": [
+      {
+        "name": "zygote_start",
+        "start": 0.0,
+        "end": 1.2,
+        "duration": 1.2,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "preload",
+        "start": 1.2,
+        "end": 4.8,
+        "duration": 3.6,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "preload_done",
+        "start": 4.8,
+        "end": 5.0,
+        "duration": 0.2,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "system_server",
+        "start": 5.0,
+        "end": 5.4,
+        "duration": 0.4,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "package_scan",
+        "start": 5.4,
+        "end": 19.9,
+        "duration": 14.5,
+        "slow": true,
+        "note": "took 14.5s (35% of boot)"
+      },
+      {
+        "name": "package_scan_done",
+        "start": 19.9,
+        "end": 20.3,
+        "duration": 0.4,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "package_ready",
+        "start": 20.3,
+        "end": 22.1,
+        "duration": 1.8,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "activity_manager",
+        "start": 22.1,
+        "end": 25.8,
+        "duration": 3.7,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "screen_on",
+        "start": 25.8,
+        "end": 42.0,
+        "duration": 16.2,
+        "slow": true,
+        "note": "took 16.2s (39% of boot)"
+      },
+      {
+        "name": "boot_complete",
+        "start": 42.0,
+        "end": 42.0,
+        "duration": 0.0,
+        "slow": false,
+        "note": ""
+      }
+    ]
+  },
+  "issues": [
+    {
+      "severity": "WARNING",
+      "category": "other",
+      "message": "Failed to scan /system_ext/priv-app/Ripple: collecting certificates took 6201 ms",
+      "recommendation": "Review the log context around this line for the root cause.",
+      "timestamp": 11.9,
+      "tag": "PackageManager",
+      "line_number": 7
+    },
+    {
+      "severity": "WARNING",
+      "category": "other",
+      "message": "Slow operation: 2340ms so far, now at startOtherServices",
+      "recommendation": "Review the log context around this line for the root cause.",
+      "timestamp": 23.0,
+      "tag": "SystemServer",
+      "line_number": 11
+    },
+    {
+      "severity": "WARNING",
+      "category": "other",
+      "message": "Device is low on storage: 91% full",
+      "recommendation": "Review the log context around this line for the root cause.",
+      "timestamp": 24.5,
+      "tag": "StorageManager",
+      "line_number": 12
+    },
+    {
+      "severity": "WARNING",
+      "category": "driver",
+      "message": "Timeout executing service: ServiceRecord{u0 com.android.bluetooth/.btservice.AdapterService}",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 38.4,
+      "tag": "ActivityManager",
+      "line_number": 15
+    }
+  ],
+  "recommendations": [
+    "Review the log context around this line for the root cause.",
+    "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+    "Investigate slow boot stages: package_scan (14.5s), screen_on (16.2s)"
+  ]
+}
