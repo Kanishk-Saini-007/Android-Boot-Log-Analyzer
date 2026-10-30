@@ -47,7 +47,7 @@ Three extras on top:
 
 ## Quickstart
 
-Requires Python 3.9+. No runtime dependencies - the analyzer is pure
+Requires Python 3.10+. No runtime dependencies - the analyzer is pure
 standard library.
 
 ```bash
