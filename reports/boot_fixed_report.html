@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boot Diagnostic Report - sample_logs/boot_fixed.log</title>
+<style>
+:root { --bg:#0b0f14; --card:#131a22; --line:#223040; --text:#e6edf3;
+  --muted:#8b98a5; --lime:#a3e635; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+  font:15px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif; }
+.wrap { max-width:1020px; margin:0 auto; padding:32px 20px 64px; }
+h1 { font-size:26px; margin:0 0 4px; }
+h2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }
+.sub { color:var(--muted); margin-bottom:24px; }
+.cards { display:flex; flex-wrap:wrap; gap:14px; }
+.card { background:var(--card); border:1px solid var(--line);
+  border-radius:12px; padding:16px 20px; min-width:150px; flex:1; }
+.card .num { font-size:30px; font-weight:700; }
+.card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;
+  letter-spacing:.06em; }
+.timeline { width:100%; background:var(--card); border:1px solid var(--line);
+  border-radius:12px; }
+.stage-label { font-size:10.5px; fill:#0b0f14; font-weight:600; }
+.axis { font-size:11px; fill:var(--muted); }
+table { width:100%; border-collapse:collapse; background:var(--card);
+  border-radius:12px; overflow:hidden; }
+th, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-size:12px; text-transform:uppercase;
+  letter-spacing:.05em; }
+tr.slow td { color:#ff8c42; }
+.issue { background:var(--card); border:1px solid var(--line);
+  border-left:4px solid; border-radius:10px; padding:12px 16px;
+  margin:10px 0; }
+.badge { color:#0b0f14; font-weight:700; font-size:11px; border-radius:6px;
+  padding:2px 8px; }
+.cat { font-weight:600; margin-left:8px; }
+.ts { color:var(--muted); font-size:12.5px; margin-left:10px; }
+.msg { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;
+  margin:8px 0 6px; word-break:break-word; }
+.rec { color:var(--muted); font-size:13px; }
+.muted { color:var(--muted); }
+footer { margin-top:40px; color:var(--muted); font-size:12.5px; }
+</style></head>
+<body><div class="wrap">
+<h1>Boot Diagnostic Report</h1>
+<div class="sub">Input: <code>sample_logs/boot_fixed.log</code></div>
+
+<div class="cards">
+  <div class="card"><div class="num">0</div>
+    <div class="lbl">Issues detected</div></div>
+  <div class="card"><div class="num">24.01s</div>
+    <div class="lbl">Total boot time</div></div>
+  <div class="card"><div class="num">0 / 0 / 0</div>
+    <div class="lbl">Critical / Error / Warning</div></div>
+  <div class="card"><div class="num" style="color:#a3e635">90</div>
+    <div class="lbl">Boot Health Score (Excellent)</div></div>
+</div>
+<p class="muted" style="margin-top:10px">Score math: start at 100; 2 x slow stage (-5 each, capped) = -10.</p>
+
+<h2>Boot timeline</h2>
+<svg viewBox='0 0 960 120' class='timeline' role='img' aria-label='Boot timeline'><rect x='90.0' y='46' width='74.5' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>kernel_start: 2.10s</title></rect><text x='95.0' y='63' class='stage-label'>kernel start 2.1s</text><rect x='164.5' y='46' width='2.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>kernel_init_done: 0.00s</title></rect><rect x='164.7' y='46' width='12.1' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>init: 0.34s</title></rect><rect x='176.7' y='46' width='314.4' height='26' rx='4' fill='#ff4d5e' opacity='0.85'><title>selinux_setup: 8.88s</title></rect><text x='181.7' y='63' class='stage-label'>selinux setup 8.9s</text><rect x='491.1' y='46' width='367.1' height='26' rx='4' fill='#ff4d5e' opacity='0.85'><title>core_services: 10.37s</title></rect><text x='496.1' y='63' class='stage-label'>core services 10.4s</text><rect x='858.2' y='46' width='81.8' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>boot_animation: 2.31s</title></rect><text x='863.2' y='63' class='stage-label'>boot animation 2.3s</text><rect x='940.0' y='46' width='2.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>boot_complete: 0.00s</title></rect><text x='90' y='36' class='axis'>0s</text><text x='920' y='36' class='axis'>24.0s</text></svg>
+<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>
+
+<h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr><tr class=><td>kernel start</td><td>0.00s</td><td>2.10s</td><td>2.10s</td><td></td></tr><tr class=><td>kernel init done</td><td>2.10s</td><td>2.11s</td><td>0.00s</td><td></td></tr><tr class=><td>init</td><td>2.11s</td><td>2.45s</td><td>0.34s</td><td></td></tr><tr class=slow><td>selinux setup</td><td>2.45s</td><td>11.33s</td><td>8.88s</td><td>SLOW</td></tr><tr class=slow><td>core services</td><td>11.33s</td><td>21.70s</td><td>10.37s</td><td>SLOW</td></tr><tr class=><td>boot animation</td><td>21.70s</td><td>24.01s</td><td>2.31s</td><td></td></tr><tr class=><td>boot complete</td><td>24.01s</td><td>24.01s</td><td>0.00s</td><td></td></tr></table>
+
+<h2>Issues by category</h2>
+<table><tr><th>Category</th><th>Count</th></tr><tr><td colspan='2' class='muted'>No issues</td></tr></table>
+
+<h2>Detected issues</h2>
+<p class='muted'>No errors or warnings detected. Clean boot.</p>
+
+<h2>Recommendations</h2>
+<ul><li>Investigate slow boot stages: selinux_setup (8.9s), core_services (10.4s)</li></ul>
+
+<footer>Generated by <strong>android-boot-log-analyzer</strong> · rule-based,
+fully explainable output · built by Kanishk Saini as a learning project</footer>
+</div></body></html>
