@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Boot Diagnostic Report - sample_logs/boot_healthy.log</title>
+<style>
+:root { --bg:#0b0f14; --card:#131a22; --line:#223040; --text:#e6edf3;
+  --muted:#8b98a5; --lime:#a3e635; }
+* { box-sizing:border-box; }
+body { margin:0; background:var(--bg); color:var(--text);
+  font:15px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif; }
+.wrap { max-width:1020px; margin:0 auto; padding:32px 20px 64px; }
+h1 { font-size:26px; margin:0 0 4px; }
+h2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }
+.sub { color:var(--muted); margin-bottom:24px; }
+.cards { display:flex; flex-wrap:wrap; gap:14px; }
+.card { background:var(--card); border:1px solid var(--line);
+  border-radius:12px; padding:16px 20px; min-width:150px; flex:1; }
+.card .num { font-size:30px; font-weight:700; }
+.card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;
+  letter-spacing:.06em; }
+.timeline { width:100%; background:var(--card); border:1px solid var(--line);
+  border-radius:12px; }
+.stage-label { font-size:10.5px; fill:#0b0f14; font-weight:600; }
+.axis { font-size:11px; fill:var(--muted); }
+table { width:100%; border-collapse:collapse; background:var(--card);
+  border-radius:12px; overflow:hidden; }
+th, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }
+th { color:var(--muted); font-size:12px; text-transform:uppercase;
+  letter-spacing:.05em; }
+tr.slow td { color:#ff8c42; }
+.issue { background:var(--card); border:1px solid var(--line);
+  border-left:4px solid; border-radius:10px; padding:12px 16px;
+  margin:10px 0; }
+.badge { color:#0b0f14; font-weight:700; font-size:11px; border-radius:6px;
+  padding:2px 8px; }
+.cat { font-weight:600; margin-left:8px; }
+.ts { color:var(--muted); font-size:12.5px; margin-left:10px; }
+.msg { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;
+  margin:8px 0 6px; word-break:break-word; }
+.rec { color:var(--muted); font-size:13px; }
+.muted { color:var(--muted); }
+footer { margin-top:40px; color:var(--muted); font-size:12.5px; }
+</style></head>
+<body><div class="wrap">
+<h1>Boot Diagnostic Report</h1>
+<div class="sub">Input: <code>sample_logs/boot_healthy.log</code></div>
+
+<div class="cards">
+  <div class="card"><div class="num">0</div>
+    <div class="lbl">Issues detected</div></div>
+  <div class="card"><div class="num">8.9s</div>
+    <div class="lbl">Total boot time</div></div>
+  <div class="card"><div class="num">0 / 0 / 0</div>
+    <div class="lbl">Critical / Error / Warning</div></div>
+  <div class="card"><div class="num" style="color:#a3e635">100</div>
+    <div class="lbl">Boot Health Score (Excellent)</div></div>
+</div>
+<p class="muted" style="margin-top:10px">Score math: start at 100; no penalties.</p>
+
+<h2>Boot timeline</h2>
+<svg viewBox='0 0 960 120' class='timeline' role='img' aria-label='Boot timeline'><rect x='90.0' y='46' width='86.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>zygote_start: 0.90s</title></rect><text x='95.0' y='63' class='stage-label'>zygote start 0.9s</text><rect x='176.0' y='46' width='143.3' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>preload: 1.50s</title></rect><text x='181.0' y='63' class='stage-label'>preload 1.5s</text><rect x='319.2' y='46' width='28.7' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>preload_done: 0.30s</title></rect><rect x='347.9' y='46' width='28.7' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>system_server: 0.30s</title></rect><rect x='376.5' y='46' width='200.6' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>package_scan: 2.10s</title></rect><text x='381.5' y='63' class='stage-label'>package scan 2.1s</text><rect x='577.1' y='46' width='28.7' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>package_scan_done: 0.30s</title></rect><rect x='605.7' y='46' width='76.4' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>package_ready: 0.80s</title></rect><text x='610.7' y='63' class='stage-label'>package ready 0.8s</text><rect x='682.1' y='46' width='76.4' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>activity_manager: 0.80s</title></rect><text x='687.1' y='63' class='stage-label'>activity manager 0.8s</text><rect x='758.5' y='46' width='181.5' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>screen_on: 1.90s</title></rect><text x='763.5' y='63' class='stage-label'>screen on 1.9s</text><rect x='940.0' y='46' width='2.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>boot_complete: 0.00s</title></rect><text x='90' y='36' class='axis'>0s</text><text x='920' y='36' class='axis'>8.9s</text></svg>
+<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>
+
+<h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr><tr class=><td>zygote start</td><td>0.00s</td><td>0.90s</td><td>0.90s</td><td></td></tr><tr class=><td>preload</td><td>0.90s</td><td>2.40s</td><td>1.50s</td><td></td></tr><tr class=><td>preload done</td><td>2.40s</td><td>2.70s</td><td>0.30s</td><td></td></tr><tr class=><td>system server</td><td>2.70s</td><td>3.00s</td><td>0.30s</td><td></td></tr><tr class=><td>package scan</td><td>3.00s</td><td>5.10s</td><td>2.10s</td><td></td></tr><tr class=><td>package scan done</td><td>5.10s</td><td>5.40s</td><td>0.30s</td><td></td></tr><tr class=><td>package ready</td><td>5.40s</td><td>6.20s</td><td>0.80s</td><td></td></tr><tr class=><td>activity manager</td><td>6.20s</td><td>7.00s</td><td>0.80s</td><td></td></tr><tr class=><td>screen on</td><td>7.00s</td><td>8.90s</td><td>1.90s</td><td></td></tr><tr class=><td>boot complete</td><td>8.90s</td><td>8.90s</td><td>0.00s</td><td></td></tr></table>
+
+<h2>Issues by category</h2>
+<table><tr><th>Category</th><th>Count</th></tr><tr><td colspan='2' class='muted'>No issues</td></tr></table>
+
+<h2>Detected issues</h2>
+<p class='muted'>No errors or warnings detected. Clean boot.</p>
+
+<h2>Recommendations</h2>
+<ul><li>Nothing to fix based on this log.</li></ul>
+
+<footer>Generated by <strong>android-boot-log-analyzer</strong> · rule-based,
+fully explainable output · built by Kanishk Saini as a learning project</footer>
+</div></body></html>
