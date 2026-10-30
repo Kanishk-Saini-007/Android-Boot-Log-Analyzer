@@ -1,0 +1,16 @@
+10-30 09:15:00.000  1000  1000 I Zygote: Preloading classes...
+10-30 09:15:01.200  1000  1000 I boot_progress_preload_start: 1200
+10-30 09:15:04.800  1000  1000 I boot_progress_preload_end: 4800
+10-30 09:15:05.000  1600  1600 I SystemServer: Entered the Android system server!
+10-30 09:15:05.100  1600  1600 I boot_progress_system_run: 5100
+10-30 09:15:05.400  1600  1600 I PackageManager: boot_progress_pms_start
+10-30 09:15:11.900  1600  1600 W PackageManager: Failed to scan /system_ext/priv-app/Ripple: collecting certificates took 6201 ms
+10-30 09:15:19.900  1600  1600 I PackageManager: boot_progress_pms_scan_done: 14500 ms elapsed
+10-30 09:15:20.300  1600  1600 I boot_progress_pms_ready: 20300
+10-30 09:15:22.100  1600  1600 I boot_progress_ams_ready: 22100
+10-30 09:15:23.000  1600  1740 W SystemServer: Slow operation: 2340ms so far, now at startOtherServices
+10-30 09:15:24.500  1600  1740 W StorageManager: Device is low on storage: 91% full
+10-30 09:15:25.800  1600  1600 I boot_progress_enable_screen: 25800
+10-30 09:15:26.100  0900  0900 I SurfaceFlinger: Boot animation running
+10-30 09:15:38.400  1600  1600 W ActivityManager: Timeout executing service: ServiceRecord{u0 com.android.bluetooth/.btservice.AdapterService}
+10-30 09:15:42.000  1600  1600 I sys.boot_completed: sys.boot_completed=1
