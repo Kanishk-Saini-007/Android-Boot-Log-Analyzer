@@ -1,0 +1,12 @@
+10-30 10:02:00.000  1000  1000 I Zygote: Preloading classes...
+10-30 10:02:00.900  1000  1000 I boot_progress_preload_start: 900
+10-30 10:02:02.400  1000  1000 I boot_progress_preload_end: 2400
+10-30 10:02:02.700  1600  1600 I SystemServer: Entered the Android system server!
+10-30 10:02:02.800  1600  1600 I boot_progress_system_run: 2800
+10-30 10:02:03.000  1600  1600 I PackageManager: boot_progress_pms_start
+10-30 10:02:05.100  1600  1600 I PackageManager: boot_progress_pms_scan_done: 2100 ms elapsed
+10-30 10:02:05.400  1600  1600 I boot_progress_pms_ready: 5400
+10-30 10:02:06.200  1600  1600 I boot_progress_ams_ready: 6200
+10-30 10:02:07.000  1600  1600 I boot_progress_enable_screen: 7000
+10-30 10:02:07.800  0900  0900 I SurfaceFlinger: Boot animation running
+10-30 10:02:08.900  1600  1600 I sys.boot_completed: sys.boot_completed=1
