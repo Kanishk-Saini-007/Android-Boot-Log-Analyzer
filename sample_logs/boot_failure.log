@@ -1,0 +1,27 @@
+[    0.000000] boot: Linux version 6.1.25-android14-4-g7f3a2c1 (builder@buildhost) (clang version 17.0.2) #1 SMP PREEMPT Fri Oct 24 12:00:00 UTC 2026
+[    0.001215] CPU: ARMv8 Processor [410fd034] revision 4
+[    0.482100] platform soc:qcom,mdss_dsi0: assigned reserved memory node linux,cma
+[    1.204512] i2c_geni 4a88000.i2c: Bus frequency is set to 400KHz
+[    2.104533] Freeing unused kernel image (initmem) memory: 2048K
+[    2.109001] init: init first stage started!
+[    2.450112] SELinux:  Initializing.
+[    2.641203] SELinux:  Permission watch in class file not defined in policy.
+[    3.001122] EXT4-fs (dm-12): mounted filesystem with ordered data mode. Opts: (null)
+[    4.122331] init: Loading module /lib/modules/qca_cld3_wlan.ko with args ''
+[    5.560012] wlan: loading out-of-tree module taints kernel.
+[    6.002211] qca_cld3_wlan: Direct firmware load for qca_cld3_wlan/qcom_cfg.ini failed with error -2
+[    6.003100] wlan: firmware file qcom_cfg.ini not found, using driver defaults
+[    7.810022] i2c_geni 4a90000.i2c: i2c error: -107
+[    7.811500] touchscreen fts_ts@38: probe failed with error -6
+[    8.122033] msm_camera_sensor 4a94000.qcom,camera: camera sensor probe ok
+[    9.455012] EXT4-fs (dm-13): recovery complete
+[   12.330041] init: starting service 'vold'...
+[   15.780211] vold: Disk at 7:0 is sdcardfs
+[   21.450000] charger: charger supply battery failed to register
+[   21.451210] power_supply battery: driver failed to report `status' property: -19
+[   28.400001] watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [kworker/2:1:234]
+[   28.401002] Modules linked in: wlan(O) q6_notifier_cpr_stats
+[   33.120044] type=1400 audit(1761772800.120:4): avc:  denied  { read } for  pid=512 comm="vold" name="firmware" dev="dm-12" ino=1234 scontext=u:r:vold:s0 tcontext=u:object_r:firmware_file:s0 tclass=dir permissive=0
+[   36.700122] init: Service 'vendor.camera-provider-2-4' (pid 610) exited with status 1
+[   41.982112] init: Service 'bootanim' (pid 900) exited with status 0
+[   42.010223] init: processing action (sys.boot_completed=1) from (/system/etc/init/hw/init.rc:1174)
