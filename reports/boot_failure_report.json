@@ -1,0 +1,160 @@
+{
+  "tool": "android-boot-log-analyzer",
+  "input": "sample_logs/boot_failure.log",
+  "summary": {
+    "issues_detected": 7,
+    "total_boot_time_seconds": 42.01,
+    "counts_by_severity": {
+      "CRITICAL": 1,
+      "ERROR": 6,
+      "WARNING": 0
+    },
+    "counts_by_category": {
+      "firmware": 1,
+      "driver": 4,
+      "kernel": 1,
+      "selinux": 1
+    },
+    "boot_health_score": 5,
+    "boot_health_grade": "Critical",
+    "score_breakdown": [
+      "1 x CRITICAL (-25 each) = -25",
+      "6 x ERROR (-10 each) = -60",
+      "2 x slow stage (-5 each, capped) = -10"
+    ]
+  },
+  "boot_timing": {
+    "duration_seconds": 42.01,
+    "note": "",
+    "stages": [
+      {
+        "name": "kernel_start",
+        "start": 0.0,
+        "end": 2.104533,
+        "duration": 2.105,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "kernel_init_done",
+        "start": 2.104533,
+        "end": 2.109001,
+        "duration": 0.004,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "init",
+        "start": 2.109001,
+        "end": 2.450112,
+        "duration": 0.341,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "selinux_setup",
+        "start": 2.450112,
+        "end": 12.330041,
+        "duration": 9.88,
+        "slow": true,
+        "note": "took 9.9s (24% of boot)"
+      },
+      {
+        "name": "core_services",
+        "start": 12.330041,
+        "end": 41.982112,
+        "duration": 29.652,
+        "slow": true,
+        "note": "took 29.7s (71% of boot)"
+      },
+      {
+        "name": "boot_animation",
+        "start": 41.982112,
+        "end": 42.010223,
+        "duration": 0.028,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "boot_complete",
+        "start": 42.010223,
+        "end": 42.010223,
+        "duration": 0.0,
+        "slow": false,
+        "note": ""
+      }
+    ]
+  },
+  "issues": [
+    {
+      "severity": "ERROR",
+      "category": "firmware",
+      "message": "qca_cld3_wlan: Direct firmware load for qca_cld3_wlan/qcom_cfg.ini failed with error -2",
+      "recommendation": "Check firmware availability: confirm the firmware file exists under /vendor/firmware or /lib/firmware and matches the driver version.",
+      "timestamp": 6.002211,
+      "tag": "",
+      "line_number": 12
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "i2c_geni 4a90000.i2c: i2c error: -107",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 7.810022,
+      "tag": "",
+      "line_number": 14
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "touchscreen fts_ts@38: probe failed with error -6",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 7.8115,
+      "tag": "",
+      "line_number": 15
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "charger: charger supply battery failed to register",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 21.45,
+      "tag": "",
+      "line_number": 20
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "power_supply battery: driver failed to report `status' property: -19",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 21.45121,
+      "tag": "",
+      "line_number": 21
+    },
+    {
+      "severity": "CRITICAL",
+      "category": "kernel",
+      "message": "watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [kworker/2:1:234]",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 28.400001,
+      "tag": "",
+      "line_number": 22
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1761772800.120:4): avc:  denied  { read } for  pid=512 comm=\"vold\" name=\"firmware\" dev=\"dm-12\" ino=1234 scontext=u:r:vold:s0 tcontext=u:object_r:firmware_file:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 33.120044,
+      "tag": "",
+      "line_number": 24
+    }
+  ],
+  "recommendations": [
+    "Check firmware availability: confirm the firmware file exists under /vendor/firmware or /lib/firmware and matches the driver version.",
+    "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+    "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+    "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+    "Investigate slow boot stages: selinux_setup (9.9s), core_services (29.7s)"
+  ]
+}
