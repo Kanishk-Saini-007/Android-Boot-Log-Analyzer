@@ -1,0 +1,20 @@
+[    0.000000] boot: Linux version 6.1.25-android14-4-g7f3a2c1 (builder@buildhost) (clang version 17.0.2) #1 SMP PREEMPT Fri Oct 24 12:00:00 UTC 2026
+[    0.001215] CPU: ARMv8 Processor [410fd034] revision 4
+[    0.482100] platform soc:qcom,mdss_dsi0: assigned reserved memory node linux,cma
+[    1.204512] i2c_geni 4a88000.i2c: Bus frequency is set to 400KHz
+[    2.104533] Freeing unused kernel image (initmem) memory: 2048K
+[    2.109001] init: init first stage started!
+[    2.450112] SELinux:  Initializing.
+[    3.001122] EXT4-fs (dm-12): mounted filesystem with ordered data mode. Opts: (null)
+[    4.122331] init: Loading module /lib/modules/qca_cld3_wlan.ko with args ''
+[    4.980211] qca_cld3_wlan: firmware qcom_cfg.ini loaded successfully (48K)
+[    6.120022] i2c_geni 4a90000.i2c: Bus frequency is set to 400KHz
+[    6.201500] touchscreen fts_ts@38: probe successful, firmware rev 0x21
+[    8.122033] msm_camera_sensor 4a94000.qcom,camera: camera sensor probe ok
+[    9.455012] EXT4-fs (dm-13): recovery complete
+[   11.330041] init: starting service 'vold'...
+[   13.780211] vold: Disk at 7:0 is sdcardfs
+[   16.450000] charger: charger supply battery registered
+[   18.120044] type=1400 audit(1761772800.120:4): avc:  granted  { read } for  pid=512 comm="vold" name="firmware" dev="dm-12" ino=1234
+[   21.700122] init: Service 'bootanim' (pid 900) exited with status 0
+[   24.010223] init: processing action (sys.boot_completed=1) from (/system/etc/init/hw/init.rc:1174)
