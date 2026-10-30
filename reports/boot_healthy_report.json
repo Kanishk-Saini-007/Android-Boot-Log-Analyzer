@@ -1,0 +1,105 @@
+{
+  "tool": "android-boot-log-analyzer",
+  "input": "sample_logs/boot_healthy.log",
+  "summary": {
+    "issues_detected": 0,
+    "total_boot_time_seconds": 8.9,
+    "counts_by_severity": {
+      "CRITICAL": 0,
+      "ERROR": 0,
+      "WARNING": 0
+    },
+    "counts_by_category": {},
+    "boot_health_score": 100,
+    "boot_health_grade": "Excellent",
+    "score_breakdown": []
+  },
+  "boot_timing": {
+    "duration_seconds": 8.9,
+    "note": "",
+    "stages": [
+      {
+        "name": "zygote_start",
+        "start": 0.0,
+        "end": 0.9,
+        "duration": 0.9,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "preload",
+        "start": 0.9,
+        "end": 2.4,
+        "duration": 1.5,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "preload_done",
+        "start": 2.4,
+        "end": 2.7,
+        "duration": 0.3,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "system_server",
+        "start": 2.7,
+        "end": 3.0,
+        "duration": 0.3,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "package_scan",
+        "start": 3.0,
+        "end": 5.1,
+        "duration": 2.1,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "package_scan_done",
+        "start": 5.1,
+        "end": 5.4,
+        "duration": 0.3,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "package_ready",
+        "start": 5.4,
+        "end": 6.2,
+        "duration": 0.8,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "activity_manager",
+        "start": 6.2,
+        "end": 7.0,
+        "duration": 0.8,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "screen_on",
+        "start": 7.0,
+        "end": 8.9,
+        "duration": 1.9,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "boot_complete",
+        "start": 8.9,
+        "end": 8.9,
+        "duration": 0.0,
+        "slow": false,
+        "note": ""
+      }
+    ]
+  },
+  "issues": [],
+  "recommendations": []
+}
