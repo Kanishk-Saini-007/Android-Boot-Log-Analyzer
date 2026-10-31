@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Android Boot Log Analyzer - Web Demo</title>
+<meta name="description" content="Try the Android Boot Log Analyzer in your browser: parse dmesg/logcat boot logs, detect and classify issues, measure boot stages and get a transparent health score.">
+<style>
+:root{
+  --bg:#0a0e0a; --panel:#10170f; --panel2:#0d130c; --border:#22301c;
+  --lime:#a3e635; --lime-dim:#65a30d; --text:#e7ece3; --muted:#94a392;
+  --red:#f87171; --amber:#fbbf24; --orange:#fb923c; --green:#4ade80; --blue:#7dd3fc;
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.55}
+a{color:var(--lime);text-decoration:none}
+a:hover{text-decoration:underline}
+.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
+header.top{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e150c,#0a0e0a)}
+header.top .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;flex-wrap:wrap;gap:10px}
+.brand{font-weight:700;font-size:1.05rem;letter-spacing:.2px}
+.brand .ks{color:var(--lime)}
+nav.links{display:flex;gap:18px;font-size:.92rem;align-items:center}
+.badge-synth{font-size:.68rem;letter-spacing:.12em;font-weight:700;color:#0a0e0a;background:var(--amber);border-radius:4px;padding:3px 8px}
+.hero{text-align:center;padding:52px 20px 30px}
+.hero h1{font-size:2.1rem;font-weight:800;letter-spacing:-.5px}
+.hero h1 .accent{color:var(--lime)}
+.hero p.sub{color:var(--muted);max-width:640px;margin:14px auto 0;font-size:1.02rem}
+.hero .note{margin-top:16px;font-size:.82rem;color:var(--muted)}
+.hero .note code{color:var(--lime);background:var(--panel);padding:1px 6px;border-radius:4px;font-size:.8rem}
+section{padding:26px 0}
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px}
+h2{font-size:1.25rem;margin-bottom:6px}
+h2 .num{color:var(--lime);font-family:ui-monospace,monospace;margin-right:8px}
+.hint{color:var(--muted);font-size:.88rem;margin-bottom:16px}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 18px;cursor:pointer;font-size:.92rem;font-weight:600}
+.tab.active{background:var(--lime);color:#0a0e0a;border-color:var(--lime)}
+.sample-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.sample-btn{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;color:var(--text);text-align:left;min-width:150px;flex:1}
+.sample-btn:hover{border-color:var(--lime-dim)}
+.sample-btn.selected{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime)}
+.sample-btn .nm{font-weight:700;font-size:.9rem}
+.sample-btn .ds{color:var(--muted);font-size:.76rem;margin-top:2px}
+.sample-btn .tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:#0a0e0a;background:var(--amber);border-radius:3px;padding:1px 5px;margin-top:6px}
+textarea{width:100%;min-height:170px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.8rem;padding:12px;resize:vertical}
+textarea:focus{outline:none;border-color:var(--lime-dim)}
+.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.btn{background:var(--lime);color:#0a0e0a;border:none;border-radius:8px;padding:11px 26px;font-size:.95rem;font-weight:700;cursor:pointer}
+.btn:hover{background:#bef264}
+.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:600}
+.btn.ghost:hover{color:var(--text);border-color:var(--lime-dim)}
+.file-label{font-size:.85rem;color:var(--muted)}
+input[type=file]{display:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
+.card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.card .lbl{font-size:.72rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
+.card .val{font-size:1.6rem;font-weight:800;margin-top:2px}
+.card .val.small{font-size:1.05rem}
+.score-excellent{color:var(--green)} .score-good{color:var(--lime)}
+.score-attention{color:var(--amber)} .score-critical{color:var(--red)}
+.breakdown{font-family:ui-monospace,monospace;font-size:.8rem;color:var(--muted);background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:18px}
+.breakdown b{color:var(--text)}
+.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.chip{font-size:.78rem;border-radius:20px;padding:4px 12px;border:1px solid var(--border);background:var(--panel2)}
+.chip.crit{border-color:var(--red);color:var(--red)}
+.chip.err{border-color:var(--orange);color:var(--orange)}
+.chip.warn{border-color:var(--amber);color:var(--amber)}
+.chip.cat{color:var(--blue)}
+.tl-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px;overflow-x:auto}
+.tl-title{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:18px}
+th{text-align:left;color:var(--muted);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border)}
+td{padding:8px 10px;border-bottom:1px solid #17210f;font-family:ui-monospace,monospace;font-size:.8rem}
+tr.slow td{color:var(--red)}
+.flag-slow{color:#0a0e0a;background:var(--red);font-size:.64rem;font-weight:800;border-radius:3px;padding:1px 6px;letter-spacing:.06em}
+.issue{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--muted);border-radius:8px;padding:14px 16px;margin-bottom:10px}
+.issue.CRITICAL{border-left-color:var(--red)}
+.issue.ERROR{border-left-color:var(--orange)}
+.issue.WARNING{border-left-color:var(--amber)}
+.issue .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
+.pill{font-size:.64rem;font-weight:800;letter-spacing:.08em;border-radius:4px;padding:2px 7px}
+.pill.CRITICAL{background:var(--red);color:#0a0e0a}
+.pill.ERROR{background:var(--orange);color:#0a0e0a}
+.pill.WARNING{background:var(--amber);color:#0a0e0a}
+.pill.cat{background:transparent;border:1px solid var(--blue);color:var(--blue)}
+.meta{font-size:.72rem;color:var(--muted);font-family:ui-monospace,monospace}
+.issue .msg{font-family:ui-monospace,monospace;font-size:.82rem;word-break:break-word}
+.issue .rec{font-size:.82rem;color:var(--muted);margin-top:6px}
+.issue .rec b{color:var(--lime);font-weight:600}
+.verdict{background:var(--panel2);border:1px solid var(--lime-dim);border-radius:10px;padding:16px 18px;margin-bottom:18px}
+.verdict div{margin:3px 0;font-size:.95rem}
+.cmp-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
+.cmp-col h3{font-size:.85rem;margin-bottom:8px}
+.cmp-col.fixed h3{color:var(--green)} .cmp-col.introduced h3{color:var(--red)} .cmp-col.persisting h3{color:var(--amber)}
+.cmp-item{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.78rem;font-family:ui-monospace,monospace;word-break:break-word}
+.empty{color:var(--muted);font-size:.85rem;font-style:italic}
+footer{border-top:1px solid var(--border);margin-top:30px;padding:26px 0 40px;color:var(--muted);font-size:.84rem;text-align:center}
+select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem}
+.vs{color:var(--muted);font-weight:700;align-self:center}
+.hidden{display:none}
+.privacy{font-size:.78rem;color:var(--muted);margin-top:10px}
+.privacy b{color:var(--green);font-weight:600}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="wrap">
+    <div class="brand"><span class="ks">KS</span> / android-boot-log-analyzer</div>
+    <nav class="links">
+      <a href="https://github.com/KanishkSaini-007/android-boot-log-analyzer">GitHub repo</a>
+      <a href="https://kanishksaini-007.github.io/portfolio/">Portfolio</a>
+      <span class="badge-synth">SAMPLES ARE SYNTHETIC</span>
+    </nav>
+  </div>
+</header>
+
+<div class="hero">
+  <h1>Android Boot Log Analyzer <span class="accent">- live demo</span></h1>
+  <p class="sub">Paste an Android boot log (dmesg or logcat) and get a diagnostic report in seconds:
+  issues found and classified, boot-stage timing with slow stages flagged, a visual timeline,
+  and a transparent 0-100 health score. Everything runs in your browser.</p>
+  <p class="note">This page is a JavaScript port of the Python CLI in the repo - same rules, same math.
+  Install the real thing with <code>pip</code>-free Python 3.10+: <code>python3 -m bootlog_analyzer your.log</code></p>
+</div>
+
+<div class="wrap">
+<section>
+  <div class="panel">
+    <div class="tabs">
+      <button class="tab active" id="tab-analyze" onclick="setMode('analyze')">Analyze a log</button>
+      <button class="tab" id="tab-compare" onclick="setMode('compare')">Compare two boots</button>
+    </div>
+
+    <div id="mode-analyze">
+      <h2><span class="num">1</span>Pick a sample log, or use your own</h2>
+      <p class="hint">The bundled samples are synthetic - hand-written logs with known failures, same ones as the repo's <code>sample_logs/</code>. Your own log never leaves this page.</p>
+      <div class="sample-row" id="sample-row"></div>
+      <textarea id="log-input" placeholder="Paste dmesg or logcat output here (threadtime or brief format)..." spellcheck="false"></textarea>
+      <div class="row">
+        <button class="btn" onclick="runAnalyze()">Analyze</button>
+        <button class="btn ghost" onclick="document.getElementById('file-input').click()">Load .log file</button>
+        <input type="file" id="file-input" accept=".log,.txt,text/plain">
+        <span class="file-label" id="file-label"></span>
+      </div>
+      <p class="privacy"><b>Private by design:</b> analysis runs entirely in your browser. No log data is uploaded anywhere.</p>
+    </div>
+
+    <div id="mode-compare" class="hidden">
+      <h2><span class="num">1</span>Pick a before and after log</h2>
+      <p class="hint">Compare mode answers "did the boot get better or worse?" - which issues were fixed, which are new, and how the time and score moved. Synthetic samples.</p>
+      <div class="row" style="margin-top:0">
+        <select id="cmp-old"></select>
+        <span class="vs">vs</span>
+        <select id="cmp-new"></select>
+        <button class="btn" onclick="runCompare()">Compare</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="results" class="hidden">
+  <div class="panel" id="results-body"></div>
+</section>
+</div>
+
+<footer>
+  <div class="wrap">
+    Built by <a href="https://github.com/KanishkSaini-007">Kanishk Saini</a> as a learning project.
+    Rule-based and explainable - every number traces back to a line in the log.
+    <a href="https://github.com/KanishkSaini-007/android-boot-log-analyzer">Source, Python CLI, tests and docs on GitHub</a>.
+  </div>
+</footer>
+
+<script>
+/* Android Boot Log Analyzer - browser port of the Python CLI.
+   Faithful port of the bootlog_analyzer package (parser, detector,
+   classifier, boot_time, score, compare). Same rules, same math. */
+(function (global) {
+'use strict';
+
+var LOGCAT_LEVELS = {V:'VERBOSE',D:'DEBUG',I:'INFO',W:'WARNING',E:'ERROR',F:'CRITICAL',S:'SILENT'};
+
+var RE_DMESG = /^\[\s*(\d+\.\d+)\]\s*(.*)$/;
+var RE_THREADTIME = /^(\d{2}-\d{2})\s+(\d{2}:\d{2}:\d{2}\.\d{3})\s+(\d+)\s+(\d+)\s+([VDIWEFS])\s+([^:]{1,64}):\s?(.*)$/;
+var RE_BRIEF = /^([VDIWEFS])\/([^(]{1,64})\(\s*(\d+)\):\s?(.*)$/;
+
+var RE_K_CRIT = /kernel panic|oops|bug:|hard lockup|soft lockup|unable to mount root|not syncing|stack-protector|watchdog.*fired/i;
+var RE_K_ERR = /\berror\b|\bfailed\b|\bfailure\b|unable to|no such file|call trace|avc:\s*denied/i;
+var RE_K_WARN = /\bwarn|deprecated|falling back|tainted|will be removed|slow/i;
+
+function kernelLevel(msg) {
+  if (RE_K_CRIT.test(msg)) return 'CRITICAL';
+  if (RE_K_ERR.test(msg)) return 'ERROR';
+  if (RE_K_WARN.test(msg)) return 'WARNING';
+  return 'INFO';
+}
+
+function hmsToSeconds(hms) {
+  var p = hms.split(':');
+  return parseInt(p[0], 10) * 3600 + parseInt(p[1], 10) * 60 + parseFloat(p[2]);
+}
+
+function round6(x) { return Math.round(x * 1e6) / 1e6; }
+function round3(x) { return Math.round(x * 1e3) / 1e3; }
+
+/* ---- parser.py ---- */
+function parseText(text) {
+  var entries = [];
+  var t0 = null;
+  var lines = text.split('\n');
+  for (var i = 0; i < lines.length; i++) {
+    var line = lines[i].replace(/\r$/, '');
+    if (!line.trim()) continue;
+    var m = RE_DMESG.exec(line);
+    if (m) {
+      var ts = parseFloat(m[1]);
+      var msg = m[2].trim();
+      if (t0 === null) t0 = ts;
+      entries.push({raw: line, source: 'dmesg', timestamp: round6(ts - t0),
+                    level: kernelLevel(msg), tag: '', message: msg});
+      continue;
+    }
+    m = RE_THREADTIME.exec(line);
+    if (m) {
+      var ts2 = hmsToSeconds(m[2]);
+      if (t0 === null) t0 = ts2;
+      entries.push({raw: line, source: 'logcat', timestamp: round6(ts2 - t0),
+                    level: LOGCAT_LEVELS[m[5]], tag: m[6].trim(), message: m[7].trim()});
+      continue;
+    }
+    m = RE_BRIEF.exec(line);
+    if (m) {
+      entries.push({raw: line, source: 'logcat', timestamp: null,
+                    level: LOGCAT_LEVELS[m[1]], tag: m[2].trim(), message: m[3].trim()});
+      continue;
+    }
+    entries.push({raw: line, source: 'unknown', timestamp: null,
+                  level: 'INFO', tag: '', message: line.trim()});
+  }
+  return entries;
+}
+
+/* ---- classifier.py ---- */
+var RULES = [
+  ['selinux', ['avc:', 'selinux', 'denied', 'sepolicy', 'permissive='],
+   'Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.'],
+  ['firmware', ['firmware', 'fw load', '.bin', '.tlv', '.fw', 'direct firmware load'],
+   'Check firmware availability: confirm the firmware file exists under /vendor/firmware or /lib/firmware and matches the driver version.'],
+  ['driver', ['driver', 'probe', 'i2c', 'spi', 'usb', 'regulator', 'wlan', 'wifi', 'bluetooth', 'bt_', 'camera', 'sensor', 'audio', 'gpu', 'drm', 'mmc', 'sdhci', 'uart', 'touchscreen', 'charger'],
+   'Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.'],
+  ['kernel', ['kernel', 'panic', 'oops', 'bug:', 'call trace', 'lockup', 'mount root', 'initramfs', 'page allocation', 'oom'],
+   'Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.'],
+  ['system', ['init:', 'servicemanager', 'vold', 'netd', 'zygote', 'system_server', 'surfaceflinger', 'audioserver', 'healthd', 'lmkd', 'android runtime', 'watchdog'],
+   'Review the failing system service: check its init .rc entry, dependencies and restart policy.']
+];
+var DEFAULT_RECOMMENDATION = 'Review the log context around this line for the root cause.';
+
+function classify(entry) {
+  var haystack = (entry.tag + ' ' + entry.message).toLowerCase();
+  for (var i = 0; i < RULES.length; i++) {
+    var kws = RULES[i][1];
+    for (var j = 0; j < kws.length; j++) {
+      if (haystack.indexOf(kws[j]) !== -1) return [RULES[i][0], RULES[i][2]];
+    }
+  }
+  if (entry.source === 'dmesg') {
+    for (var k = 0; k < RULES.length; k++) {
+      if (RULES[k][0] === 'kernel') return [RULES[k][0], RULES[k][2]];
+    }
+  }
+  return ['other', DEFAULT_RECOMMENDATION];
+}
+
+/* ---- detector.py ---- */
+var RE_ALWAYS_FLAG = /avc:\s*denied/i;
+var RE_FLAG_IF_LOW = /\bfailed\b|\berror\b/i;
+var ISSUE_LEVELS = {WARNING: 1, ERROR: 1, CRITICAL: 1};
+var RE_SUPPRESS = /avc:\s*denied\s*\{\s*getopt|read.*battery.*sysfs/i;
+
+function detect(entries) {
+  var issues = [];
+  for (var idx = 0; idx < entries.length; idx++) {
+    var entry = entries[idx];
+    var level = entry.level;
+    var flagged = level in ISSUE_LEVELS;
+    if (!flagged && RE_ALWAYS_FLAG.test(entry.message)) { flagged = true; level = 'ERROR'; }
+    if (!flagged && entry.source === 'logcat' && RE_FLAG_IF_LOW.test(entry.message)) { flagged = true; level = 'WARNING'; }
+    if (!flagged) continue;
+    if (RE_SUPPRESS.test(entry.message)) continue;
+    var cr = classify(entry);
+    issues.push({severity: level, category: cr[0], message: entry.message,
+                 recommendation: cr[1], timestamp: entry.timestamp,
+                 tag: entry.tag, line_number: idx + 1, raw: entry.raw});
+  }
+  return issues;
+}
+
+function summarize(issues) {
+  var bySev = {CRITICAL: 0, ERROR: 0, WARNING: 0};
+  var byCat = {};
+  for (var i = 0; i < issues.length; i++) {
+    var s = issues[i].severity, c = issues[i].category;
+    bySev[s] = (bySev[s] || 0) + 1;
+    byCat[c] = (byCat[c] || 0) + 1;
+  }
+  return {issues_detected: issues.length, counts_by_severity: bySev, counts_by_category: byCat};
+}
+
+/* ---- boot_time.py ---- */
+var STAGE_MARKERS = [
+  ['kernel_start', ['boot: Linux version', 'Linux version']],
+  ['kernel_init_done', ['Freeing unused kernel image', 'Run /init as init process', 'Freeing unused kernel memory']],
+  ['init', ['init first stage', 'init: init', 'init started']],
+  ['selinux_setup', ['SELinux:  Initializing', 'selinux:  SELinux']],
+  ['core_services', ["starting service 'vold'", 'starting service `vold`']],
+  ['boot_animation', ["Service 'bootanim'", 'bootanimation']],
+  ['zygote_start', ['zygote', 'Zygote', 'AndroidRuntime']],
+  ['preload', ['boot_progress_preload_start']],
+  ['preload_done', ['boot_progress_preload_end']],
+  ['system_server', ['boot_progress_system_run', 'SystemServer', 'Entered the Android system server']],
+  ['package_scan', ['boot_progress_pms_start', 'PackageManager']],
+  ['package_scan_done', ['boot_progress_pms_scan_done']],
+  ['package_ready', ['boot_progress_pms_ready']],
+  ['activity_manager', ['boot_progress_ams_ready']],
+  ['screen_on', ['boot_progress_enable_screen', 'Display ready']],
+  ['boot_complete', ['sys.boot_completed=1', 'boot_completed: 1', 'Boot completed', 'boot_progress_last']]
+];
+var SLOW_THRESHOLD_S = 5.0;
+var SLOW_MIN_SHARE = 0.10;
+
+function markerHit(text, substrings) {
+  var low = text.toLowerCase();
+  for (var i = 0; i < substrings.length; i++) {
+    if (low.indexOf(substrings[i].toLowerCase()) !== -1) return true;
+  }
+  return false;
+}
+
+function analyzeBootTime(entries, slowThreshold) {
+  if (slowThreshold === undefined) slowThreshold = SLOW_THRESHOLD_S;
+  var timed = entries.filter(function (e) { return e.timestamp !== null; });
+  var timing = {duration: null, stages: [], slow_stages: [], timestamps_found: timed.length > 0, note: ''};
+  if (!timed.length) {
+    timing.note = 'No timestamps found in this log, so boot timing could not be measured.';
+    return timing;
+  }
+  timing.duration = round3(timed[timed.length - 1].timestamp - timed[0].timestamp);
+  var hits = [], seen = {};
+  for (var i = 0; i < timed.length; i++) {
+    var e = timed[i];
+    for (var j = 0; j < STAGE_MARKERS.length; j++) {
+      var name = STAGE_MARKERS[j][0], subs = STAGE_MARKERS[j][1];
+      if (seen[name]) continue;
+      if (markerHit(e.message, subs) || markerHit(e.tag, subs)) {
+        hits.push([e.timestamp, name]);
+        seen[name] = true;
+        break;
+      }
+    }
+  }
+  var stages = [];
+  for (var k = 0; k < hits.length; k++) {
+    var end = (k + 1 < hits.length) ? hits[k + 1][0] : timed[timed.length - 1].timestamp;
+    stages.push({name: hits[k][1], start: hits[k][0], end: end, slow: false, note: '',
+                 duration: round3(end - hits[k][0])});
+  }
+  if (timing.duration && timing.duration > 0) {
+    for (var s = 0; s < stages.length; s++) {
+      var st = stages[s];
+      if (st.duration >= slowThreshold && st.duration >= SLOW_MIN_SHARE * timing.duration) {
+        st.slow = true;
+        st.note = 'took ' + st.duration.toFixed(1) + 's (' + Math.round(st.duration / timing.duration * 100) + '% of boot)';
+      }
+    }
+  }
+  timing.stages = stages;
+  timing.slow_stages = stages.filter(function (st) { return st.slow; });
+  if (!stages.length) {
+    timing.note = 'Timestamps were found but no known boot markers (boot_progress_*, kernel milestones). Only total elapsed time is reported.';
+  }
+  return timing;
+}
+
+/* ---- score.py ---- */
+var PENALTIES = {CRITICAL: 25, ERROR: 10, WARNING: 3};
+var SLOW_STAGE_PENALTY = 5, SLOW_STAGE_CAP = 15;
+
+function healthScore(issues, timing) {
+  var breakdown = [];
+  var score = 100;
+  ['CRITICAL', 'ERROR', 'WARNING'].forEach(function (sev) {
+    var count = issues.filter(function (i) { return i.severity === sev; }).length;
+    if (count) {
+      var lost = count * PENALTIES[sev];
+      score -= lost;
+      breakdown.push(count + ' x ' + sev + ' (-' + PENALTIES[sev] + ' each) = -' + lost);
+    }
+  });
+  var slow = timing.slow_stages.length;
+  if (slow) {
+    var lost2 = Math.min(slow * SLOW_STAGE_PENALTY, SLOW_STAGE_CAP);
+    score -= lost2;
+    breakdown.push(slow + ' x slow stage (-' + SLOW_STAGE_PENALTY + ' each, capped) = -' + lost2);
+  }
+  score = Math.max(0, score);
+  var grade = score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : score >= 40 ? 'Needs attention' : 'Critical';
+  return {score: score, grade: grade, breakdown: breakdown};
+}
+
+/* ---- compare.py ---- */
+function fingerprint(issue) {
+  var norm = issue.message.toLowerCase().replace(/\d+/g, '#').trim();
+  return issue.category + '|' + norm;
+}
+
+function compareIssues(oldIssues, newIssues) {
+  var oldMap = {}, newMap = {};
+  oldIssues.forEach(function (i) { oldMap[fingerprint(i)] = i; });
+  newIssues.forEach(function (i) { newMap[fingerprint(i)] = i; });
+  var fixed = [], introduced = [], persisting = [];
+  Object.keys(oldMap).forEach(function (k) { if (!(k in newMap)) fixed.push(oldMap[k]); });
+  Object.keys(newMap).forEach(function (k) {
+    if (!(k in oldMap)) introduced.push(newMap[k]); else persisting.push(newMap[k]);
+  });
+  return {fixed: fixed, introduced: introduced, persisting: persisting,
+          summary: {fixed: fixed.length, introduced: introduced.length, persisting: persisting.length}};
+}
+
+function verdict(oldHealth, newHealth, oldDuration, newDuration) {
+  var lines = [];
+  var delta = newHealth.score - oldHealth.score;
+  if (delta > 0) lines.push('Health score improved by ' + delta + ' points (' + oldHealth.score + ' -> ' + newHealth.score + ').');
+  else if (delta < 0) lines.push('Health score dropped by ' + (-delta) + ' points (' + oldHealth.score + ' -> ' + newHealth.score + ').');
+  else lines.push('Health score unchanged at ' + newHealth.score + '.');
+  if (oldDuration !== null && newDuration !== null) {
+    var d = newDuration - oldDuration;
+    if (Math.abs(d) >= 0.5) {
+      var dir = d > 0 ? 'slower' : 'faster';
+      lines.push('Boot is ' + Math.abs(d).toFixed(1) + 's ' + dir + ' (' + oldDuration.toFixed(1) + 's -> ' + newDuration.toFixed(1) + 's).');
+    } else {
+      lines.push('Boot time roughly unchanged (' + oldDuration.toFixed(1) + 's -> ' + newDuration.toFixed(1) + 's).');
+    }
+  }
+  return lines;
+}
+
+/* Full pipeline: raw log text -> report object (mirrors the Python JSON report). */
+function analyzeLog(text, inputName) {
+  var entries = parseText(text);
+  var issues = detect(entries);
+  var timing = analyzeBootTime(entries);
+  var summary = summarize(issues);
+  var health = healthScore(issues, timing);
+  return {
+    tool: 'android-boot-log-analyzer',
+    input: inputName || 'pasted log',
+    entries_count: entries.length,
+    summary: {
+      issues_detected: summary.issues_detected,
+      total_boot_time_seconds: timing.duration,
+      counts_by_severity: summary.counts_by_severity,
+      counts_by_category: summary.counts_by_category,
+      boot_health_score: health.score,
+      boot_health_grade: health.grade,
+      score_breakdown: health.breakdown
+    },
+    boot_timing: timing,
+    issues: issues
+  };
+}
+
+function compareLogs(oldText, newText) {
+  var oldR = analyzeLog(oldText, 'before');
+  var newR = analyzeLog(newText, 'after');
+  var cmp = compareIssues(oldR.issues, newR.issues);
+  var v = verdict(
+    {score: oldR.summary.boot_health_score},
+    {score: newR.summary.boot_health_score},
+    oldR.summary.total_boot_time_seconds,
+    newR.summary.total_boot_time_seconds
+  );
+  return {before: oldR, after: newR, fixed: cmp.fixed, introduced: cmp.introduced,
+          persisting: cmp.persisting, summary: cmp.summary, verdict: v};
+}
+
+var API = {
+  parseText: parseText, detect: detect, classify: classify, summarize: summarize,
+  analyzeBootTime: analyzeBootTime, healthScore: healthScore,
+  analyzeLog: analyzeLog, compareLogs: compareLogs
+};
+if (typeof module !== 'undefined' && module.exports) module.exports = API;
+global.BootLogAnalyzer = API;
+})(typeof window !== 'undefined' ? window : globalThis);
+
+</script>
+<script>
+var SAMPLES = {"boot_failure": "[    0.000000] boot: Linux version 6.1.25-android14-4-g7f3a2c1 (builder@buildhost) (clang version 17.0.2) #1 SMP PREEMPT Fri Oct 24 12:00:00 UTC 2026\n[    0.001215] CPU: ARMv8 Processor [410fd034] revision 4\n[    0.482100] platform soc:qcom,mdss_dsi0: assigned reserved memory node linux,cma\n[    1.204512] i2c_geni 4a88000.i2c: Bus frequency is set to 400KHz\n[    2.104533] Freeing unused kernel image (initmem) memory: 2048K\n[    2.109001] init: init first stage started!\n[    2.450112] SELinux:  Initializing.\n[    2.641203] SELinux:  Permission watch in class file not defined in policy.\n[    3.001122] EXT4-fs (dm-12): mounted filesystem with ordered data mode. Opts: (null)\n[    4.122331] init: Loading module /lib/modules/qca_cld3_wlan.ko with args ''\n[    5.560012] wlan: loading out-of-tree module taints kernel.\n[    6.002211] qca_cld3_wlan: Direct firmware load for qca_cld3_wlan/qcom_cfg.ini failed with error -2\n[    6.003100] wlan: firmware file qcom_cfg.ini not found, using driver defaults\n[    7.810022] i2c_geni 4a90000.i2c: i2c error: -107\n[    7.811500] touchscreen fts_ts@38: probe failed with error -6\n[    8.122033] msm_camera_sensor 4a94000.qcom,camera: camera sensor probe ok\n[    9.455012] EXT4-fs (dm-13): recovery complete\n[   12.330041] init: starting service 'vold'...\n[   15.780211] vold: Disk at 7:0 is sdcardfs\n[   21.450000] charger: charger supply battery failed to register\n[   21.451210] power_supply battery: driver failed to report `status' property: -19\n[   28.400001] watchdog: BUG: soft lockup - CPU#2 stuck for 22s! [kworker/2:1:234]\n[   28.401002] Modules linked in: wlan(O) q6_notifier_cpr_stats\n[   33.120044] type=1400 audit(1761772800.120:4): avc:  denied  { read } for  pid=512 comm=\"vold\" name=\"firmware\" dev=\"dm-12\" ino=1234 scontext=u:r:vold:s0 tcontext=u:object_r:firmware_file:s0 tclass=dir permissive=0\n[   36.700122] init: Service 'vendor.camera-provider-2-4' (pid 610) exited with status 1\n[   41.982112] init: Service 'bootanim' (pid 900) exited with status 0\n[   42.010223] init: processing action (sys.boot_completed=1) from (/system/etc/init/hw/init.rc:1174)\n", "boot_fixed": "[    0.000000] boot: Linux version 6.1.25-android14-4-g7f3a2c1 (builder@buildhost) (clang version 17.0.2) #1 SMP PREEMPT Fri Oct 24 12:00:00 UTC 2026\n[    0.001215] CPU: ARMv8 Processor [410fd034] revision 4\n[    0.482100] platform soc:qcom,mdss_dsi0: assigned reserved memory node linux,cma\n[    1.204512] i2c_geni 4a88000.i2c: Bus frequency is set to 400KHz\n[    2.104533] Freeing unused kernel image (initmem) memory: 2048K\n[    2.109001] init: init first stage started!\n[    2.450112] SELinux:  Initializing.\n[    3.001122] EXT4-fs (dm-12): mounted filesystem with ordered data mode. Opts: (null)\n[    4.122331] init: Loading module /lib/modules/qca_cld3_wlan.ko with args ''\n[    4.980211] qca_cld3_wlan: firmware qcom_cfg.ini loaded successfully (48K)\n[    6.120022] i2c_geni 4a90000.i2c: Bus frequency is set to 400KHz\n[    6.201500] touchscreen fts_ts@38: probe successful, firmware rev 0x21\n[    8.122033] msm_camera_sensor 4a94000.qcom,camera: camera sensor probe ok\n[    9.455012] EXT4-fs (dm-13): recovery complete\n[   11.330041] init: starting service 'vold'...\n[   13.780211] vold: Disk at 7:0 is sdcardfs\n[   16.450000] charger: charger supply battery registered\n[   18.120044] type=1400 audit(1761772800.120:4): avc:  granted  { read } for  pid=512 comm=\"vold\" name=\"firmware\" dev=\"dm-12\" ino=1234\n[   21.700122] init: Service 'bootanim' (pid 900) exited with status 0\n[   24.010223] init: processing action (sys.boot_completed=1) from (/system/etc/init/hw/init.rc:1174)\n", "boot_slow": "10-30 09:15:00.000  1000  1000 I Zygote: Preloading classes...\n10-30 09:15:01.200  1000  1000 I boot_progress_preload_start: 1200\n10-30 09:15:04.800  1000  1000 I boot_progress_preload_end: 4800\n10-30 09:15:05.000  1600  1600 I SystemServer: Entered the Android system server!\n10-30 09:15:05.100  1600  1600 I boot_progress_system_run: 5100\n10-30 09:15:05.400  1600  1600 I PackageManager: boot_progress_pms_start\n10-30 09:15:11.900  1600  1600 W PackageManager: Failed to scan /system_ext/priv-app/Ripple: collecting certificates took 6201 ms\n10-30 09:15:19.900  1600  1600 I PackageManager: boot_progress_pms_scan_done: 14500 ms elapsed\n10-30 09:15:20.300  1600  1600 I boot_progress_pms_ready: 20300\n10-30 09:15:22.100  1600  1600 I boot_progress_ams_ready: 22100\n10-30 09:15:23.000  1600  1740 W SystemServer: Slow operation: 2340ms so far, now at startOtherServices\n10-30 09:15:24.500  1600  1740 W StorageManager: Device is low on storage: 91% full\n10-30 09:15:25.800  1600  1600 I boot_progress_enable_screen: 25800\n10-30 09:15:26.100  0900  0900 I SurfaceFlinger: Boot animation running\n10-30 09:15:38.400  1600  1600 W ActivityManager: Timeout executing service: ServiceRecord{u0 com.android.bluetooth/.btservice.AdapterService}\n10-30 09:15:42.000  1600  1600 I sys.boot_completed: sys.boot_completed=1\n", "boot_healthy": "10-30 10:02:00.000  1000  1000 I Zygote: Preloading classes...\n10-30 10:02:00.900  1000  1000 I boot_progress_preload_start: 900\n10-30 10:02:02.400  1000  1000 I boot_progress_preload_end: 2400\n10-30 10:02:02.700  1600  1600 I SystemServer: Entered the Android system server!\n10-30 10:02:02.800  1600  1600 I boot_progress_system_run: 2800\n10-30 10:02:03.000  1600  1600 I PackageManager: boot_progress_pms_start\n10-30 10:02:05.100  1600  1600 I PackageManager: boot_progress_pms_scan_done: 2100 ms elapsed\n10-30 10:02:05.400  1600  1600 I boot_progress_pms_ready: 5400\n10-30 10:02:06.200  1600  1600 I boot_progress_ams_ready: 6200\n10-30 10:02:07.000  1600  1600 I boot_progress_enable_screen: 7000\n10-30 10:02:07.800  0900  0900 I SurfaceFlinger: Boot animation running\n10-30 10:02:08.900  1600  1600 I sys.boot_completed: sys.boot_completed=1\n"};
+
+var SAMPLE_META = {
+  boot_failure: {name: 'boot_failure.log', desc: 'dmesg - firmware load failure, driver probe errors, SELinux denial, CPU soft lockup', synth: true},
+  boot_fixed:   {name: 'boot_fixed.log',   desc: 'dmesg - the same boot after the fixes (pair with compare mode)', synth: true},
+  boot_slow:    {name: 'boot_slow.log',    desc: 'logcat - 42s boot with a 14.5s package scan', synth: true},
+  boot_healthy: {name: 'boot_healthy.log', desc: 'logcat - clean 9s boot, no issues', synth: true}
+};
+var selectedSample = null;
+var fileText = null;
+
+function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+function gradeClass(g){return g==='Excellent'?'score-excellent':g==='Good'?'score-good':g==='Needs attention'?'score-attention':'score-critical';}
+function stageLabel(n){return n.replace(/_/g,' ');}
+
+function setMode(m){
+  document.getElementById('tab-analyze').classList.toggle('active', m==='analyze');
+  document.getElementById('tab-compare').classList.toggle('active', m==='compare');
+  document.getElementById('mode-analyze').classList.toggle('hidden', m!=='analyze');
+  document.getElementById('mode-compare').classList.toggle('hidden', m!=='compare');
+  document.getElementById('results').classList.add('hidden');
+}
+
+function buildSamples(){
+  var row = document.getElementById('sample-row');
+  row.innerHTML = '';
+  Object.keys(SAMPLE_META).forEach(function(key){
+    var meta = SAMPLE_META[key];
+    var b = document.createElement('button');
+    b.className = 'sample-btn'; b.id = 'sample-' + key;
+    b.innerHTML = '<div class="nm">' + esc(meta.name) + '</div><div class="ds">' + esc(meta.desc) + '</div>' + (meta.synth ? '<span class="tag">SYNTHETIC SAMPLE</span>' : '');
+    b.onclick = function(){ selectSample(key); };
+    row.appendChild(b);
+  });
+  var o = document.getElementById('cmp-old'), n = document.getElementById('cmp-new');
+  Object.keys(SAMPLE_META).forEach(function(key){
+    o.add(new Option(SAMPLE_META[key].name, key));
+    n.add(new Option(SAMPLE_META[key].name, key));
+  });
+  o.value = 'boot_failure'; n.value = 'boot_fixed';
+}
+
+function selectSample(key){
+  selectedSample = key; fileText = null;
+  document.getElementById('file-label').textContent = '';
+  document.getElementById('file-input').value = '';
+  Object.keys(SAMPLE_META).forEach(function(k){
+    document.getElementById('sample-' + k).classList.toggle('selected', k === key);
+  });
+  document.getElementById('log-input').value = SAMPLES[key];
+}
+
+document.getElementById('file-input').addEventListener('change', function(ev){
+  var f = ev.target.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    fileText = String(r.result);
+    selectedSample = null;
+    Object.keys(SAMPLE_META).forEach(function(k){ document.getElementById('sample-' + k).classList.remove('selected'); });
+    document.getElementById('log-input').value = fileText;
+    document.getElementById('file-label').textContent = f.name + ' loaded';
+  };
+  r.readAsText(f);
+});
+
+document.getElementById('log-input').addEventListener('input', function(){
+  selectedSample = null; fileText = null;
+  Object.keys(SAMPLE_META).forEach(function(k){ document.getElementById('sample-' + k).classList.remove('selected'); });
+  document.getElementById('file-label').textContent = '';
+});
+
+function currentInput(){
+  var v = document.getElementById('log-input').value;
+  if (v.trim()) return {text: v, name: selectedSample ? SAMPLE_META[selectedSample].name : (document.getElementById('file-label').textContent.replace(' loaded','') || 'pasted log'), synthetic: !!selectedSample};
+  return null;
+}
+
+function renderTimeline(report){
+  var t = report.boot_timing;
+  if (!t.timestamps_found || !t.stages.length || !t.duration) return '';
+  var W = 960, barH = 26, padT = 30, padB = 44, rowGap = 10;
+  var H = padT + t.stages.length * (barH + rowGap) + 40 + padB;
+  var sx = function(ts){ return ts / t.duration * W; };
+  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:620px" role="img" aria-label="Boot timeline">';
+  for (var g = 0; g <= 4; g++){
+    var ts = t.duration * g / 4, x = sx(ts);
+    svg += '<line x1="' + x + '" y1="' + (padT - 8) + '" x2="' + x + '" y2="' + (H - padB + 6) + '" stroke="#22301c" stroke-width="1"/>';
+    svg += '<text x="' + x + '" y="' + (H - padB + 22) + '" fill="#94a392" font-size="11" text-anchor="middle" font-family="ui-monospace,monospace">' + ts.toFixed(1) + 's</text>';
+  }
+  t.stages.forEach(function(st, i){
+    var y = padT + i * (barH + rowGap);
+    var x = sx(st.start), w = Math.max(2, sx(st.end) - x);
+    var color = st.slow ? '#f87171' : '#65a30d';
+    svg += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + barH + '" rx="4" fill="' + color + '" opacity="0.9"/>';
+    var lbl = stageLabel(st.name) + ' - ' + st.duration.toFixed(1) + 's' + (st.slow ? ' SLOW' : '');
+    var est = lbl.length * 6.6 + 12;
+    if (w >= est) {
+      svg += '<text x="' + (x + 6) + '" y="' + (y + barH / 2 + 4) + '" fill="#0a0e0a" font-size="11" font-weight="700" font-family="ui-monospace,monospace">' + esc(lbl) + '</text>';
+    } else {
+      var lx = Math.min(x + w + 6, W - est + 6);
+      svg += '<text x="' + lx + '" y="' + (y + barH / 2 + 4) + '" fill="#e7ece3" font-size="11" font-family="ui-monospace,monospace">' + esc(lbl) + '</text>';
+    }
+  });
+  var dotY = padT + t.stages.length * (barH + rowGap) + 14;
+  svg += '<line x1="0" y1="' + dotY + '" x2="' + W + '" y2="' + dotY + '" stroke="#22301c" stroke-width="1"/>';
+  report.issues.forEach(function(is){
+    if (is.timestamp === null) return;
+    var c = is.severity === 'CRITICAL' ? '#f87171' : is.severity === 'ERROR' ? '#fb923c' : '#fbbf24';
+    svg += '<circle cx="' + sx(is.timestamp) + '" cy="' + dotY + '" r="5" fill="' + c + '"><title>' + esc(is.severity + ' @ ' + is.timestamp.toFixed(1) + 's: ' + is.message) + '</title></circle>';
+  });
+  svg += '<text x="0" y="' + (dotY + 18) + '" fill="#94a392" font-size="10" font-family="ui-monospace,monospace">dots = issues at the moment they fired (red critical, orange error, yellow warning)</text>';
+  svg += '</svg>';
+  return '<div class="tl-wrap"><div class="tl-title">Boot timeline</div>' + svg + '</div>';
+}
+
+function renderReport(report){
+  var s = report.summary, t = report.boot_timing;
+  var h = '';
+  h += '<h2><span class="num">2</span>Diagnostic report' + (report.synthetic ? ' <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLE</span>' : '') + '</h2>';
+  h += '<p class="hint">Input: <code>' + esc(report.input) + '</code> - ' + report.entries_count + ' log lines parsed. Same report the Python CLI writes, rendered here.</p>';
+  h += '<div class="cards">';
+  h += '<div class="card"><div class="lbl">Boot time</div><div class="val">' + (t.duration !== null ? t.duration.toFixed(1) + 's' : 'n/a') + '</div></div>';
+  h += '<div class="card"><div class="lbl">Issues found</div><div class="val">' + s.issues_detected + '</div></div>';
+  h += '<div class="card"><div class="lbl">Slow stages</div><div class="val">' + t.slow_stages.length + '</div></div>';
+  h += '<div class="card"><div class="lbl">Boot health score</div><div class="val ' + gradeClass(s.boot_health_grade) + '">' + s.boot_health_score + '<span style="font-size:.9rem;color:var(--muted)">/100</span></div><div class="lbl">' + esc(s.boot_health_grade) + '</div></div>';
+  h += '</div>';
+  h += '<div class="breakdown"><b>Score math:</b> start at 100' + (s.score_breakdown.length ? ', then ' + s.score_breakdown.map(esc).join(', ') : ', no deductions') + ', final score = <b>' + s.boot_health_score + '</b></div>';
+  h += '<div class="chips">';
+  if (s.counts_by_severity.CRITICAL) h += '<span class="chip crit">' + s.counts_by_severity.CRITICAL + ' critical</span>';
+  if (s.counts_by_severity.ERROR) h += '<span class="chip err">' + s.counts_by_severity.ERROR + ' error</span>';
+  if (s.counts_by_severity.WARNING) h += '<span class="chip warn">' + s.counts_by_severity.WARNING + ' warning</span>';
+  Object.keys(s.counts_by_category).forEach(function(c){ h += '<span class="chip cat">' + esc(c) + ': ' + s.counts_by_category[c] + '</span>'; });
+  if (!s.issues_detected) h += '<span class="chip" style="border-color:var(--green);color:var(--green)">no issues detected</span>';
+  h += '</div>';
+  h += renderTimeline(report);
+  if (t.note) h += '<p class="hint">' + esc(t.note) + '</p>';
+  if (t.stages.length){
+    h += '<table><thead><tr><th>Boot stage</th><th>Start</th><th>Duration</th><th>% of boot</th><th></th></tr></thead><tbody>';
+    t.stages.forEach(function(st){
+      var pct = t.duration ? Math.round(st.duration / t.duration * 100) : 0;
+      h += '<tr class="' + (st.slow ? 'slow' : '') + '"><td>' + esc(stageLabel(st.name)) + '</td><td>' + st.start.toFixed(1) + 's</td><td>' + st.duration.toFixed(1) + 's</td><td>' + pct + '%</td><td>' + (st.slow ? '<span class="flag-slow">SLOW</span> ' + esc(st.note) : '') + '</td></tr>';
+    });
+    h += '</tbody></table>';
+  }
+  if (report.issues.length){
+    h += '<h2 style="margin-top:10px"><span class="num">3</span>Issues and recommendations</h2>';
+    report.issues.forEach(function(is){
+      h += '<div class="issue ' + is.severity + '"><div class="head">';
+      h += '<span class="pill ' + is.severity + '">' + is.severity + '</span>';
+      h += '<span class="pill cat">' + esc(is.category) + '</span>';
+      h += '<span class="meta">line ' + is.line_number + (is.timestamp !== null ? ' - t=' + is.timestamp.toFixed(1) + 's' : '') + (is.tag ? ' - ' + esc(is.tag) : '') + '</span>';
+      h += '</div><div class="msg">' + esc(is.message) + '</div>';
+      h += '<div class="rec"><b>Fix:</b> ' + esc(is.recommendation) + '</div></div>';
+    });
+  } else {
+    h += '<p class="empty">No ERROR, WARNING or CRITICAL lines found. Clean boot.</p>';
+  }
+  return h;
+}
+
+function runAnalyze(){
+  var inp = currentInput();
+  if (!inp){ alert('Pick a sample, paste a log, or load a file first.'); return; }
+  var report = BootLogAnalyzer.analyzeLog(inp.text, inp.name);
+  report.synthetic = inp.synthetic;
+  var body = document.getElementById('results-body');
+  body.innerHTML = renderReport(report);
+  showResults();
+}
+
+function issueMini(is){
+  return '<div class="cmp-item"><span class="pill ' + is.severity + '" style="margin-right:6px">' + is.severity + '</span>' + esc(is.message) + '</div>';
+}
+
+function runCompare(){
+  var ok = document.getElementById('cmp-old').value, nk = document.getElementById('cmp-new').value;
+  if (ok === nk){ alert('Pick two different logs to compare.'); return; }
+  var r = BootLogAnalyzer.compareLogs(SAMPLES[ok], SAMPLES[nk]);
+  var h = '';
+  h += '<h2><span class="num">2</span>Compare report <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLES</span></h2>';
+  h += '<p class="hint">' + esc(SAMPLE_META[ok].name) + ' (before) vs ' + esc(SAMPLE_META[nk].name) + ' (after)</p>';
+  h += '<div class="cards">';
+  h += '<div class="card"><div class="lbl">Before</div><div class="val small ' + gradeClass(r.before.summary.boot_health_grade) + '">' + r.before.summary.boot_health_score + '/100 - ' + (r.before.summary.total_boot_time_seconds !== null ? r.before.summary.total_boot_time_seconds.toFixed(1) + 's' : 'n/a') + '</div></div>';
+  h += '<div class="card"><div class="lbl">After</div><div class="val small ' + gradeClass(r.after.summary.boot_health_grade) + '">' + r.after.summary.boot_health_score + '/100 - ' + (r.after.summary.total_boot_time_seconds !== null ? r.after.summary.total_boot_time_seconds.toFixed(1) + 's' : 'n/a') + '</div></div>';
+  h += '<div class="card"><div class="lbl">Fixed</div><div class="val" style="color:var(--green)">' + r.summary.fixed + '</div></div>';
+  h += '<div class="card"><div class="lbl">New</div><div class="val" style="color:var(--red)">' + r.summary.introduced + '</div></div>';
+  h += '<div class="card"><div class="lbl">Persisting</div><div class="val" style="color:var(--amber)">' + r.summary.persisting + '</div></div>';
+  h += '</div>';
+  h += '<div class="verdict">' + r.verdict.map(function(v){ return '<div>' + esc(v) + '</div>'; }).join('') + '</div>';
+  h += '<div class="cmp-cols">';
+  h += '<div class="cmp-col fixed"><h3>Fixed (' + r.summary.fixed + ')</h3>' + (r.fixed.length ? r.fixed.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
+  h += '<div class="cmp-col introduced"><h3>New issues (' + r.summary.introduced + ')</h3>' + (r.introduced.length ? r.introduced.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
+  h += '<div class="cmp-col persisting"><h3>Still present (' + r.summary.persisting + ')</h3>' + (r.persisting.length ? r.persisting.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
+  h += '</div>';
+  document.getElementById('results-body').innerHTML = h;
+  showResults();
+}
+
+function showResults(){
+  var sec = document.getElementById('results');
+  sec.classList.remove('hidden');
+  sec.scrollIntoView({behavior: 'smooth', block: 'start'});
+}
+
+buildSamples();
+</script>
+</body>
+</html>
