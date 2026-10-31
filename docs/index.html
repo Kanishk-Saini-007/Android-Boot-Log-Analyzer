@@ -3,8 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Android Boot Log Analyzer - Web Demo</title>
-<meta name="description" content="Try the Android Boot Log Analyzer in your browser: parse dmesg/logcat boot logs, detect and classify issues, measure boot stages and get a transparent health score.">
+<title>Android Boot Log Analyzer - Full Web Tool</title>
+<meta name="description" content="Analyze Android boot logs in your browser: parse dmesg/logcat, detect and classify issues, measure boot stages, score boot health, compare two boots, and download the same HTML/JSON reports the Python CLI writes.">
 <style>
 :root{
   --bg:#0a0e0a; --panel:#10170f; --panel2:#0d130c; --border:#22301c;
@@ -101,6 +101,20 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 .hidden{display:none}
 .privacy{font-size:.78rem;color:var(--muted);margin-top:10px}
 .privacy b{color:var(--green);font-weight:600}
+.cmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
+.cmp-side{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px}
+.cmp-side h3{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
+.cmp-side select{width:100%}
+.cmp-side textarea{min-height:140px;margin-top:10px}
+.cmp-side .file-label{display:block;margin-top:6px}
+.dl-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
+.btn.dl{background:transparent;border:1px solid var(--lime-dim);color:var(--lime);font-weight:600;padding:8px 16px;font-size:.85rem}
+.btn.dl:hover{background:var(--panel2);border-color:var(--lime)}
+.recs{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px}
+.recs .recs-title{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.recs ol{margin:8px 0 0 18px;padding:0}
+.recs li{font-size:.86rem;margin:4px 0}
+.dl-note{font-size:.76rem;color:var(--muted);margin-bottom:14px;margin-top:0}
 </style>
 </head>
 <body>
@@ -116,12 +130,13 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 </header>
 
 <div class="hero">
-  <h1>Android Boot Log Analyzer <span class="accent">- live demo</span></h1>
-  <p class="sub">Paste an Android boot log (dmesg or logcat) and get a diagnostic report in seconds:
-  issues found and classified, boot-stage timing with slow stages flagged, a visual timeline,
-  and a transparent 0-100 health score. Everything runs in your browser.</p>
-  <p class="note">This page is a JavaScript port of the Python CLI in the repo - same rules, same math.
-  Install the real thing with <code>pip</code>-free Python 3.10+: <code>python3 -m bootlog_analyzer your.log</code></p>
+  <h1>Android Boot Log Analyzer <span class="accent">- full web tool</span></h1>
+  <p class="sub">Analyze real Android boot logs (dmesg or logcat) right here: issues found and classified,
+  boot-stage timing with slow stages flagged, a visual timeline, a transparent 0-100 health score, and the
+  same HTML/JSON reports the CLI writes, ready to download. Compare two boots to see exactly what got fixed.
+  Everything runs in your browser.</p>
+  <p class="note">This page is a faithful JavaScript port of the Python CLI in the repo - same parser, same rules,
+  same math, with output checked against the CLI itself. Run the original with Python 3.10+: <code>python3 -m bootlog_analyzer your.log</code></p>
 </div>
 
 <div class="wrap">
@@ -148,11 +163,32 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 
     <div id="mode-compare" class="hidden">
       <h2><span class="num">1</span>Pick a before and after log</h2>
-      <p class="hint">Compare mode answers "did the boot get better or worse?" - which issues were fixed, which are new, and how the time and score moved. Synthetic samples.</p>
-      <div class="row" style="margin-top:0">
-        <select id="cmp-old"></select>
-        <span class="vs">vs</span>
-        <select id="cmp-new"></select>
+      <p class="hint">Compare mode answers "did the boot get better or worse?" - which issues were fixed, which are new,
+      and how the time and score moved. Use the synthetic samples or your own two logs (for example one captured before
+      a fix and one after). Your logs never leave this page.</p>
+      <div class="cmp-grid">
+        <div class="cmp-side">
+          <h3>Before</h3>
+          <select id="cmp-old-sample"></select>
+          <textarea id="cmp-old-input" placeholder="Paste the 'before' log (dmesg or logcat)..." spellcheck="false"></textarea>
+          <div class="row">
+            <button class="btn ghost" onclick="document.getElementById('cmp-old-file').click()">Load .log file</button>
+            <input type="file" id="cmp-old-file" accept=".log,.txt,text/plain">
+          </div>
+          <span class="file-label" id="cmp-old-label"></span>
+        </div>
+        <div class="cmp-side">
+          <h3>After</h3>
+          <select id="cmp-new-sample"></select>
+          <textarea id="cmp-new-input" placeholder="Paste the 'after' log (dmesg or logcat)..." spellcheck="false"></textarea>
+          <div class="row">
+            <button class="btn ghost" onclick="document.getElementById('cmp-new-file').click()">Load .log file</button>
+            <input type="file" id="cmp-new-file" accept=".log,.txt,text/plain">
+          </div>
+          <span class="file-label" id="cmp-new-label"></span>
+        </div>
+      </div>
+      <div class="row">
         <button class="btn" onclick="runCompare()">Compare</button>
       </div>
     </div>
@@ -466,13 +502,14 @@ function analyzeLog(text, inputName) {
       score_breakdown: health.breakdown
     },
     boot_timing: timing,
-    issues: issues
+    issues: issues,
+    recommendations: buildRecommendations(issues, timing)
   };
 }
 
-function compareLogs(oldText, newText) {
-  var oldR = analyzeLog(oldText, 'before');
-  var newR = analyzeLog(newText, 'after');
+function compareLogs(oldText, newText, oldName, newName) {
+  var oldR = analyzeLog(oldText, oldName || 'before');
+  var newR = analyzeLog(newText, newName || 'after');
   var cmp = compareIssues(oldR.issues, newR.issues);
   var v = verdict(
     {score: oldR.summary.boot_health_score},
@@ -484,10 +521,184 @@ function compareLogs(oldText, newText) {
           persisting: cmp.persisting, summary: cmp.summary, verdict: v};
 }
 
+/* ---- report.py: canonical report dict + standalone HTML download ----
+   Faithful port of the Python report generator, so the files you download
+   here are the files the CLI would write for the same log. */
+var CATEGORY_LABELS = {kernel: 'Kernel', driver: 'Driver', firmware: 'Firmware', selinux: 'SELinux', system: 'System', other: 'Other'};
+var PY_SEV_COLORS = {CRITICAL: '#ff4d5e', ERROR: '#ff8c42', WARNING: '#ffd447'};
+
+function escHtml(s) {
+  return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+                  .replace(/"/g, '&quot;').replace(/'/g, '&#x27;');
+}
+
+/* Python str(float): integer-valued floats keep one decimal (42 -> '42.0'). */
+function pyFloat(x) { return Number.isInteger(x) ? x.toFixed(1) : String(x); }
+
+function buildRecommendations(issues, timing) {
+  var recs = [];
+  issues.forEach(function (i) { if (recs.indexOf(i.recommendation) === -1) recs.push(i.recommendation); });
+  if (timing.slow_stages.length) {
+    var note = 'Investigate slow boot stages: ' + timing.slow_stages.map(function (s) {
+      return s.name + ' (' + s.duration.toFixed(1) + 's)';
+    }).join(', ');
+    if (recs.indexOf(note) === -1) recs.push(note);
+  }
+  return recs;
+}
+
+/* The exact dictionary the Python CLI writes as report.json. */
+function canonicalReport(r) {
+  return {
+    tool: 'android-boot-log-analyzer',
+    input: r.input,
+    summary: {
+      issues_detected: r.summary.issues_detected,
+      total_boot_time_seconds: r.summary.total_boot_time_seconds,
+      counts_by_severity: r.summary.counts_by_severity,
+      counts_by_category: r.summary.counts_by_category,
+      boot_health_score: r.summary.boot_health_score,
+      boot_health_grade: r.summary.boot_health_grade,
+      score_breakdown: r.summary.score_breakdown
+    },
+    boot_timing: {
+      duration_seconds: r.boot_timing.duration,
+      note: r.boot_timing.note,
+      stages: r.boot_timing.stages.map(function (s) {
+        return {name: s.name, start: s.start, end: s.end, duration: s.duration, slow: s.slow, note: s.note};
+      })
+    },
+    issues: r.issues.map(function (i) {
+      return {severity: i.severity, category: i.category, message: i.message,
+              recommendation: i.recommendation, timestamp: i.timestamp, tag: i.tag,
+              line_number: i.line_number};
+    }),
+    recommendations: buildRecommendations(r.issues, r.boot_timing)
+  };
+}
+
+/* The exact JSON the Python CLI writes for `compare --json`. */
+function compareReportJson(r, oldName, newName) {
+  var mini = function (i) { return {severity: i.severity, category: i.category, message: i.message}; };
+  return {old: oldName, new: newName, verdict: r.verdict, summary: r.summary,
+          introduced: r.introduced.map(mini), fixed: r.fixed.map(mini)};
+}
+
+/* Port of report.py _timeline_svg. */
+function pyTimelineSvg(stages, issues, duration) {
+  if (!duration || duration <= 0 || !stages.length) {
+    return "<p class='muted'>No boot-stage markers found, so no timeline could be drawn for this log.</p>";
+  }
+  var width = 960, height = 120, barY = 46, barH = 26, span = duration;
+  var x = function (ts) { return 90 + (ts / span) * (width - 110); };
+  var parts = ["<svg viewBox='0 0 " + width + ' ' + height + "'" + " class='timeline' role='img' aria-label='Boot timeline'>"];
+  stages.forEach(function (stage) {
+    var sx = x(stage.start), ex = Math.max(x(stage.end), x(stage.start) + 2);
+    var color = stage.slow ? '#ff4d5e' : '#a3e635';
+    parts.push("<rect x='" + sx.toFixed(1) + "' y='" + barY + "' width='" + (ex - sx).toFixed(1) + "' height='" + barH + "' rx='4' fill='" + color + "' opacity='0.85'><title>" + stage.name + ': ' + stage.duration.toFixed(2) + 's</title></rect>');
+    var label = stage.name.replace(/_/g, ' ');
+    if (ex - sx > 60) {
+      parts.push("<text x='" + (sx + 5).toFixed(1) + "' y='" + (barY + 17) + "' class='stage-label'>" + escHtml(label) + ' ' + stage.duration.toFixed(1) + 's</text>');
+    }
+  });
+  issues.forEach(function (issue) {
+    if (issue.timestamp === null || issue.timestamp === undefined) return;
+    var cx = x(issue.timestamp);
+    var color = PY_SEV_COLORS[issue.severity] || '#ffd447';
+    parts.push("<circle cx='" + cx.toFixed(1) + "' cy='" + (barY + barH + 18) + "' r='5' fill='" + color + "' stroke='#0b0f14' stroke-width='1.5'><title>[" + issue.severity + '] ' + escHtml(issue.category) + ': ' + escHtml(issue.message.slice(0, 160)) + '</title></circle>');
+  });
+  parts.push("<text x='90' y='" + (barY - 10) + "' class='axis'>0s</text><text x='" + (width - 40) + "' y='" + (barY - 10) + "' class='axis'>" + span.toFixed(1) + 's</text>');
+  parts.push('</svg>');
+  return parts.join('');
+}
+
+var REPORT_CSS = "\n:root { --bg:#0b0f14; --card:#131a22; --line:#223040; --text:#e6edf3;\n  --muted:#8b98a5; --lime:#a3e635; }\n* { box-sizing:border-box; }\nbody { margin:0; background:var(--bg); color:var(--text);\n  font:15px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif; }\n.wrap { max-width:1020px; margin:0 auto; padding:32px 20px 64px; }\nh1 { font-size:26px; margin:0 0 4px; }\nh2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }\n.sub { color:var(--muted); margin-bottom:24px; }\n.cards { display:flex; flex-wrap:wrap; gap:14px; }\n.card { background:var(--card); border:1px solid var(--line);\n  border-radius:12px; padding:16px 20px; min-width:150px; flex:1; }\n.card .num { font-size:30px; font-weight:700; }\n.card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;\n  letter-spacing:.06em; }\n.timeline { width:100%; background:var(--card); border:1px solid var(--line);\n  border-radius:12px; }\n.stage-label { font-size:10.5px; fill:#0b0f14; font-weight:600; }\n.axis { font-size:11px; fill:var(--muted); }\ntable { width:100%; border-collapse:collapse; background:var(--card);\n  border-radius:12px; overflow:hidden; }\nth, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }\nth { color:var(--muted); font-size:12px; text-transform:uppercase;\n  letter-spacing:.05em; }\ntr.slow td { color:#ff8c42; }\n.issue { background:var(--card); border:1px solid var(--line);\n  border-left:4px solid; border-radius:10px; padding:12px 16px;\n  margin:10px 0; }\n.badge { color:#0b0f14; font-weight:700; font-size:11px; border-radius:6px;\n  padding:2px 8px; }\n.cat { font-weight:600; margin-left:8px; }\n.ts { color:var(--muted); font-size:12.5px; margin-left:10px; }\n.msg { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;\n  margin:8px 0 6px; word-break:break-word; }\n.rec { color:var(--muted); font-size:13px; }\n.muted { color:var(--muted); }\nfooter { margin-top:40px; color:var(--muted); font-size:12.5px; }\n";
+
+/* Port of report.py render_html: the self-contained report page the CLI writes. */
+function renderStandaloneHtml(report) {
+  var e = escHtml;
+  var summary = report.summary;
+  var sev = summary.counts_by_severity;
+  var cat = summary.counts_by_category;
+  var score = summary.boot_health_score;
+  var grade = summary.boot_health_grade;
+  var scoreColor = score >= 90 ? '#a3e635' : score >= 70 ? '#ffd447' : score >= 40 ? '#ff8c42' : '#ff4d5e';
+
+  var catKeys = Object.keys(cat).sort(function (a, b) { return cat[b] - cat[a]; });
+  var catRows = catKeys.map(function (k) {
+    return '<tr><td>' + e(CATEGORY_LABELS[k] || (k.charAt(0).toUpperCase() + k.slice(1))) + '</td><td>' + cat[k] + '</td></tr>';
+  }).join('') || "<tr><td colspan='2' class='muted'>No issues</td></tr>";
+
+  var issueCards = report.issues.map(function (i) {
+    var color = PY_SEV_COLORS[i.severity] || '#ffd447';
+    var ts = i.timestamp !== null ? 't+' + i.timestamp.toFixed(3) + 's' : 'n/a';
+    return "<div class='issue' style='border-left-color:" + color + "'>"
+      + "<div class='issue-head'><span class='badge' style='background:" + color + "'>" + i.severity + '</span> '
+      + "<span class='cat'>" + e(CATEGORY_LABELS[i.category] || i.category) + '</span>'
+      + "<span class='ts'>" + e(ts) + ' · line ' + i.line_number
+      + (i.tag ? ' · ' + e(i.tag) : '')
+      + '</span></div>'
+      + "<div class='msg'>" + e(i.message) + '</div>'
+      + "<div class='rec'>&#8594; " + e(i.recommendation) + '</div></div>';
+  });
+  var issuesHtml = issueCards.join('') || "<p class='muted'>No errors or warnings detected. Clean boot.</p>";
+
+  var stageRows = report.boot_timing.stages.map(function (s) {
+    return '<tr class=' + (s.slow ? 'slow' : '') + '>'
+      + '<td>' + e(s.name.replace(/_/g, ' ')) + '</td>'
+      + '<td>' + s.start.toFixed(2) + 's</td><td>' + s.end.toFixed(2) + 's</td>'
+      + '<td>' + s.duration.toFixed(2) + 's</td>'
+      + '<td>' + (s.slow ? 'SLOW' : '') + '</td></tr>';
+  }).join('');
+
+  var breakdown = summary.score_breakdown.length ? summary.score_breakdown.join('; ') : 'no penalties';
+  var recs = report.recommendations.map(function (r) { return '<li>' + e(r) + '</li>'; }).join('')
+    || '<li>Nothing to fix based on this log.</li>';
+  var timeline = pyTimelineSvg(report.boot_timing.stages, report.issues, report.boot_timing.duration_seconds);
+  var tbt = summary.total_boot_time_seconds;
+  var stagesTable = stageRows
+    ? '<h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr>' + stageRows + '</table>'
+    : '';
+
+  return '<!DOCTYPE html>\n'
+    + '<html lang="en"><head><meta charset="utf-8">\n'
+    + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
+    + '<title>Boot Diagnostic Report - ' + e(report.input) + '</title>\n'
+    + '<style>' + REPORT_CSS + '</style></head>\n'
+    + '<body><div class="wrap">\n'
+    + '<h1>Boot Diagnostic Report</h1>\n'
+    + '<div class="sub">Input: <code>' + e(report.input) + '</code></div>\n\n'
+    + '<div class="cards">\n'
+    + '  <div class="card"><div class="num">' + summary.issues_detected + '</div>\n'
+    + '    <div class="lbl">Issues detected</div></div>\n'
+    + '  <div class="card"><div class="num">' + (tbt !== null ? pyFloat(tbt) : 'n/a') + (tbt !== null ? 's' : '') + '</div>\n'
+    + '    <div class="lbl">Total boot time</div></div>\n'
+    + '  <div class="card"><div class="num">' + (sev.CRITICAL || 0) + ' / ' + (sev.ERROR || 0) + ' / ' + (sev.WARNING || 0) + '</div>\n'
+    + '    <div class="lbl">Critical / Error / Warning</div></div>\n'
+    + '  <div class="card"><div class="num" style="color:' + scoreColor + '">' + score + '</div>\n'
+    + '    <div class="lbl">Boot Health Score (' + e(grade) + ')</div></div>\n'
+    + '</div>\n'
+    + '<p class="muted" style="margin-top:10px">Score math: start at 100; ' + e(breakdown) + '.</p>\n\n'
+    + '<h2>Boot timeline</h2>\n'
+    + timeline + '\n'
+    + '<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>\n\n'
+    + stagesTable + '\n\n'
+    + '<h2>Issues by category</h2>\n'
+    + '<table><tr><th>Category</th><th>Count</th></tr>' + catRows + '</table>\n\n'
+    + '<h2>Detected issues</h2>\n'
+    + issuesHtml + '\n\n'
+    + '<h2>Recommendations</h2>\n'
+    + '<ul>' + recs + '</ul>\n\n'
+    + '<footer>Generated by <strong>android-boot-log-analyzer</strong> \u00b7 rule-based,\nfully explainable output \u00b7 built by Kanishk Saini as a learning project</footer>\n'
+    + '</div></body></html>';
+}
+
 var API = {
   parseText: parseText, detect: detect, classify: classify, summarize: summarize,
   analyzeBootTime: analyzeBootTime, healthScore: healthScore,
-  analyzeLog: analyzeLog, compareLogs: compareLogs
+  analyzeLog: analyzeLog, compareLogs: compareLogs,
+  buildRecommendations: buildRecommendations, canonicalReport: canonicalReport,
+  renderStandaloneHtml: renderStandaloneHtml, compareReportJson: compareReportJson
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
 global.BootLogAnalyzer = API;
@@ -505,6 +716,9 @@ var SAMPLE_META = {
 };
 var selectedSample = null;
 var fileText = null;
+var cmpState = {old: {sample: null, file: null}, new: {sample: null, file: null}};
+var lastAnalyze = null;  /* {report, canonical} for the visible analyze result */
+var lastCompare = null;  /* {result, oldName, newName} for the visible compare result */
 
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
 function gradeClass(g){return g==='Excellent'?'score-excellent':g==='Good'?'score-good':g==='Needs attention'?'score-attention':'score-critical';}
@@ -529,12 +743,19 @@ function buildSamples(){
     b.onclick = function(){ selectSample(key); };
     row.appendChild(b);
   });
-  var o = document.getElementById('cmp-old'), n = document.getElementById('cmp-new');
-  Object.keys(SAMPLE_META).forEach(function(key){
-    o.add(new Option(SAMPLE_META[key].name, key));
-    n.add(new Option(SAMPLE_META[key].name, key));
+  ['old','new'].forEach(function(side){
+    var sel = document.getElementById('cmp-' + side + '-sample');
+    sel.innerHTML = '';
+    sel.add(new Option('Choose a synthetic sample...', ''));
+    Object.keys(SAMPLE_META).forEach(function(key){
+      sel.add(new Option(SAMPLE_META[key].name + ' (synthetic)', key));
+    });
+    sel.addEventListener('change', function(){ cmpPickSample(side, sel.value); });
+    document.getElementById('cmp-' + side + '-file').addEventListener('change', function(ev){ cmpPickFile(side, ev); });
+    document.getElementById('cmp-' + side + '-input').addEventListener('input', function(){ cmpTyped(side); });
   });
-  o.value = 'boot_failure'; n.value = 'boot_fixed';
+  cmpPickSample('old', 'boot_failure');
+  cmpPickSample('new', 'boot_fixed');
 }
 
 function selectSample(key){
@@ -571,6 +792,40 @@ function currentInput(){
   var v = document.getElementById('log-input').value;
   if (v.trim()) return {text: v, name: selectedSample ? SAMPLE_META[selectedSample].name : (document.getElementById('file-label').textContent.replace(' loaded','') || 'pasted log'), synthetic: !!selectedSample};
   return null;
+}
+
+/* ---- compare inputs: each side takes a sample, a paste, or a file ---- */
+function cmpPickSample(side, key){
+  cmpState[side].sample = key || null; cmpState[side].file = null;
+  document.getElementById('cmp-' + side + '-sample').value = key || '';
+  document.getElementById('cmp-' + side + '-file').value = '';
+  document.getElementById('cmp-' + side + '-label').textContent = '';
+  document.getElementById('cmp-' + side + '-input').value = key ? SAMPLES[key] : '';
+}
+function cmpPickFile(side, ev){
+  var f = ev.target.files[0];
+  if (!f) return;
+  var r = new FileReader();
+  r.onload = function(){
+    cmpState[side].sample = null; cmpState[side].file = f.name;
+    document.getElementById('cmp-' + side + '-sample').value = '';
+    document.getElementById('cmp-' + side + '-input').value = String(r.result);
+    document.getElementById('cmp-' + side + '-label').textContent = f.name + ' loaded';
+  };
+  r.readAsText(f);
+}
+function cmpTyped(side){
+  cmpState[side].sample = null; cmpState[side].file = null;
+  document.getElementById('cmp-' + side + '-sample').value = '';
+  document.getElementById('cmp-' + side + '-label').textContent = '';
+}
+function cmpInput(side){
+  var v = document.getElementById('cmp-' + side + '-input').value;
+  if (!v.trim()) return null;
+  var st = cmpState[side];
+  var name = st.sample ? SAMPLE_META[st.sample].name
+    : (st.file || 'pasted log (' + (side === 'old' ? 'before' : 'after') + ')');
+  return {text: v, name: name, synthetic: !!st.sample};
 }
 
 function renderTimeline(report){
@@ -611,11 +866,41 @@ function renderTimeline(report){
   return '<div class="tl-wrap"><div class="tl-title">Boot timeline</div>' + svg + '</div>';
 }
 
+function reportBase(name){
+  var b = String(name || '').split(/[\\/]/).pop().replace(/\.(log|txt)$/i, '').replace(/[^A-Za-z0-9_.-]+/g, '_');
+  return b || 'boot';
+}
+function downloadBlob(content, filename, mime){
+  var blob = new Blob([content], {type: mime});
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = filename;
+  document.body.appendChild(a); a.click();
+  setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 0);
+}
+function downloadAnalyze(kind){
+  if (!lastAnalyze) return;
+  var c = lastAnalyze.canonical, base = reportBase(c.input);
+  if (kind === 'json') downloadBlob(JSON.stringify(c, null, 2) + '\n', base + '_report.json', 'application/json');
+  else downloadBlob(BootLogAnalyzer.renderStandaloneHtml(c), base + '_report.html', 'text/html');
+}
+function downloadCompareJson(){
+  if (!lastCompare) return;
+  var c = BootLogAnalyzer.compareReportJson(lastCompare.result, lastCompare.oldName, lastCompare.newName);
+  downloadBlob(JSON.stringify(c, null, 2) + '\n',
+    reportBase(lastCompare.oldName) + '_vs_' + reportBase(lastCompare.newName) + '_compare.json', 'application/json');
+}
+
 function renderReport(report){
   var s = report.summary, t = report.boot_timing;
   var h = '';
   h += '<h2><span class="num">2</span>Diagnostic report' + (report.synthetic ? ' <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLE</span>' : '') + '</h2>';
   h += '<p class="hint">Input: <code>' + esc(report.input) + '</code> - ' + report.entries_count + ' log lines parsed. Same report the Python CLI writes, rendered here.</p>';
+  h += '<div class="dl-row">'
+    + '<button class="btn dl" onclick="downloadAnalyze(\'json\')">Download JSON report</button>'
+    + '<button class="btn dl" onclick="downloadAnalyze(\'html\')">Download HTML report</button>'
+    + '</div>';
+  h += '<p class="dl-note">The downloads are the same files the Python CLI writes for this log (report.json / report.html), generated in your browser.</p>';
   h += '<div class="cards">';
   h += '<div class="card"><div class="lbl">Boot time</div><div class="val">' + (t.duration !== null ? t.duration.toFixed(1) + 's' : 'n/a') + '</div></div>';
   h += '<div class="card"><div class="lbl">Issues found</div><div class="val">' + s.issues_detected + '</div></div>';
@@ -653,6 +938,11 @@ function renderReport(report){
   } else {
     h += '<p class="empty">No ERROR, WARNING or CRITICAL lines found. Clean boot.</p>';
   }
+  if (report.recommendations && report.recommendations.length){
+    h += '<div class="recs"><div class="recs-title">What to do next</div><ol>';
+    report.recommendations.forEach(function(r){ h += '<li>' + esc(r) + '</li>'; });
+    h += '</ol></div>';
+  }
   return h;
 }
 
@@ -661,6 +951,7 @@ function runAnalyze(){
   if (!inp){ alert('Pick a sample, paste a log, or load a file first.'); return; }
   var report = BootLogAnalyzer.analyzeLog(inp.text, inp.name);
   report.synthetic = inp.synthetic;
+  lastAnalyze = {report: report, canonical: BootLogAnalyzer.canonicalReport(report)};
   var body = document.getElementById('results-body');
   body.innerHTML = renderReport(report);
   showResults();
@@ -671,12 +962,17 @@ function issueMini(is){
 }
 
 function runCompare(){
-  var ok = document.getElementById('cmp-old').value, nk = document.getElementById('cmp-new').value;
-  if (ok === nk){ alert('Pick two different logs to compare.'); return; }
-  var r = BootLogAnalyzer.compareLogs(SAMPLES[ok], SAMPLES[nk]);
+  var o = cmpInput('old'), n = cmpInput('new');
+  if (!o || !n){ alert('Give both sides a log: pick a sample, paste text, or load a file for before and after.'); return; }
+  if (o.text === n.text){ alert('The two logs are identical - pick two different logs to compare.'); return; }
+  var r = BootLogAnalyzer.compareLogs(o.text, n.text, o.name, n.name);
+  lastCompare = {result: r, oldName: o.name, newName: n.name};
+  var badge = function(x){ return x.synthetic ? ' <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLE</span>' : ''; };
   var h = '';
-  h += '<h2><span class="num">2</span>Compare report <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLES</span></h2>';
-  h += '<p class="hint">' + esc(SAMPLE_META[ok].name) + ' (before) vs ' + esc(SAMPLE_META[nk].name) + ' (after)</p>';
+  h += '<h2><span class="num">2</span>Compare report</h2>';
+  h += '<p class="hint">' + esc(o.name) + ' (before)' + badge(o) + ' vs ' + esc(n.name) + ' (after)' + badge(n) + '</p>';
+  h += '<div class="dl-row"><button class="btn dl" onclick="downloadCompareJson()">Download JSON comparison</button></div>';
+  h += '<p class="dl-note">The same JSON the Python CLI writes with <code>compare --json</code> for these two logs.</p>';
   h += '<div class="cards">';
   h += '<div class="card"><div class="lbl">Before</div><div class="val small ' + gradeClass(r.before.summary.boot_health_grade) + '">' + r.before.summary.boot_health_score + '/100 - ' + (r.before.summary.total_boot_time_seconds !== null ? r.before.summary.total_boot_time_seconds.toFixed(1) + 's' : 'n/a') + '</div></div>';
   h += '<div class="card"><div class="lbl">After</div><div class="val small ' + gradeClass(r.after.summary.boot_health_grade) + '">' + r.after.summary.boot_health_score + '/100 - ' + (r.after.summary.total_boot_time_seconds !== null ? r.after.summary.total_boot_time_seconds.toFixed(1) + 's' : 'n/a') + '</div></div>';
