@@ -8,6 +8,18 @@ Built by [Kanishk Saini](https://github.com/KanishkSaini-007) as a learning
 project. Everything in this repo is rule-based and explainable - every number
 in the report can be traced back to a line in the log.
 
+## Try it in your browser
+
+The whole analyzer also runs as a web page - no install, and your logs are
+never uploaded anywhere:
+**<https://kanishksaini-007.github.io/android-boot-log-analyzer/>**
+
+Paste or load your own `dmesg`/`logcat` output, analyze it, compare two
+boots, and download the same HTML/JSON reports the CLI writes. The page
+(`docs/index.html`, served with GitHub Pages) is a JavaScript port of this
+exact package, with its output checked against the CLI. The bundled sample
+logs are synthetic, and are labeled as such on the page.
+
 ## The problem
 
 Android developers deal with thousands of boot-log lines. Manually finding
