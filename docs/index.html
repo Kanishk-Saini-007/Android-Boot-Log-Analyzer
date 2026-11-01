@@ -332,6 +332,10 @@ var STAGE_MARKERS = [
 ];
 var SLOW_THRESHOLD_S = 5.0;
 var SLOW_MIN_SHARE = 0.10;
+/* Lines where the system prints its own elapsed time, e.g. "init: processing action (late-fs) took 1450ms". */
+var EXPLICIT_DURATION_RE = /(?:took|duration[=:])\s*(\d+(?:\.\d+)?)\s*(ms|msec|milliseconds|s|sec|seconds)\b/i;
+var ACTION_NAME_RE = /processing action \(([^)]+)\)/;
+var SERVICE_NAME_RE = /[Ss]ervice '([^']+)'/;
 
 function markerHit(text, substrings) {
   var low = text.toLowerCase();
@@ -369,6 +373,38 @@ function analyzeBootTime(entries, slowThreshold) {
     stages.push({name: hits[k][1], start: hits[k][0], end: end, slow: false, note: '',
                  duration: round3(end - hits[k][0])});
   }
+  /* A marker-derived stage covering (nearly) the whole log is fabricated detail:
+     the log has no intermediate markers, so no single phase can be measured. */
+  var droppedWholeBoot = false;
+  if (timing.duration && timing.duration > 0) {
+    var keptStages = [];
+    for (var d = 0; d < stages.length; d++) {
+      if (stages[d].duration >= 0.99 * timing.duration) droppedWholeBoot = true;
+      else keptStages.push(stages[d]);
+    }
+    stages = keptStages;
+  }
+  /* Explicitly timed actions/services ("took 1450ms") become stages too. */
+  var known = {}, labeled = {};
+  for (var hn = 0; hn < hits.length; hn++) known[hits[hn][1]] = true;
+  for (var x = 0; x < timed.length; x++) {
+    var xe = timed[x];
+    var m = EXPLICIT_DURATION_RE.exec(xe.message);
+    if (!m) continue;
+    var amount = parseFloat(m[1]);
+    var unit = m[2].toLowerCase();
+    var seconds = (unit === 'ms' || unit === 'msec' || unit === 'milliseconds') ? amount / 1000 : amount;
+    var am = ACTION_NAME_RE.exec(xe.message), sm = SERVICE_NAME_RE.exec(xe.message);
+    var label;
+    if (am) label = 'action ' + am[1];
+    else if (sm) label = 'service ' + sm[1];
+    else label = xe.tag || 'timed action';
+    if (known[label] || labeled[label]) continue;
+    labeled[label] = true;
+    stages.push({name: label, start: round3(xe.timestamp - seconds), end: xe.timestamp,
+                 slow: false, note: '', duration: round3(seconds)});
+  }
+  stages.sort(function (a, b) { return a.start - b.start; });
   if (timing.duration && timing.duration > 0) {
     for (var s = 0; s < stages.length; s++) {
       var st = stages[s];
@@ -380,7 +416,9 @@ function analyzeBootTime(entries, slowThreshold) {
   }
   timing.stages = stages;
   timing.slow_stages = stages.filter(function (st) { return st.slow; });
-  if (!stages.length) {
+  if (droppedWholeBoot) {
+    timing.note = 'The log spans the reported time but has no intermediate boot markers, so per-stage timing is unavailable; only explicitly timed actions (if any) are listed.';
+  } else if (!stages.length) {
     timing.note = 'Timestamps were found but no known boot markers (boot_progress_*, kernel milestones). Only total elapsed time is reported.';
   }
   return timing;
@@ -775,4 +813,4 @@ function showResults(){
 buildSamples();
 </script>
 </body>
-                 </html>
+</html>
