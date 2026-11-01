@@ -3,146 +3,213 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Android Boot Log Analyzer - Full Web Tool</title>
+<title>Android Boot Log Analyzer - Kanishk Saini</title>
 <meta name="description" content="Analyze Android boot logs in your browser: parse dmesg/logcat, detect and classify issues, measure boot stages, and download the same HTML/JSON reports the Python CLI writes.">
 <style>
 :root{
-  --bg:#0a0e0a; --panel:#10170f; --panel2:#0d130c; --border:#22301c;
-  --lime:#a3e635; --lime-dim:#65a30d; --text:#e7ece3; --muted:#94a392;
-  --red:#f87171; --amber:#fbbf24; --orange:#fb923c; --green:#4ade80; --blue:#7dd3fc;
+  --bg:#0a0d07; --bg2:#0e120a; --panel:#121709; --panel2:#151b0d; --panel3:#1a2110;
+  --line:#28331a; --line2:#3a4a22;
+  --txt:#f0f6e4; --dim:#b3c49a; --faint:#8ba171;
+  --lime:#b9f34d; --lime2:#93d428; --lime-dim:#5c7a1e;
+  --amber:#f2c14e; --orange:#ff9d5c; --red:#ff6f61;
+  --mono:ui-monospace,'Cascadia Code','SF Mono',Menlo,Consolas,'Liberation Mono',monospace;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;
 }
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:var(--bg);color:var(--text);font-family:'Segoe UI',system-ui,-apple-system,sans-serif;line-height:1.55}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--txt);font-family:var(--sans);font-size:16px;line-height:1.55;-webkit-text-size-adjust:100%;
+  background-image:radial-gradient(1100px 500px at 85% -10%,rgba(185,243,77,.07),transparent 60%),radial-gradient(800px 400px at -10% 30%,rgba(185,243,77,.04),transparent 55%)}
 a{color:var(--lime);text-decoration:none}
 a:hover{text-decoration:underline}
-.wrap{max-width:1060px;margin:0 auto;padding:0 20px}
-header.top{border-bottom:1px solid var(--border);background:linear-gradient(180deg,#0e150c,#0a0e0a)}
-header.top .wrap{display:flex;align-items:center;justify-content:space-between;padding-top:16px;padding-bottom:16px;flex-wrap:wrap;gap:10px}
-.brand{font-weight:700;font-size:1.05rem;letter-spacing:.2px}
-.brand .ks{color:var(--lime)}
-nav.links{display:flex;gap:18px;font-size:.92rem;align-items:center}
-.badge-synth{font-size:.68rem;letter-spacing:.12em;font-weight:700;color:#0a0e0a;background:var(--amber);border-radius:4px;padding:3px 8px}
-.hero{text-align:center;padding:52px 20px 30px}
-.hero h1{font-size:2.1rem;font-weight:800;letter-spacing:-.5px}
-.hero h1 .accent{color:var(--lime)}
-.hero p.sub{color:var(--muted);max-width:640px;margin:14px auto 0;font-size:1.02rem}
-.hero .note{margin-top:16px;font-size:.82rem;color:var(--muted)}
-.hero .note code{color:var(--lime);background:var(--panel);padding:1px 6px;border-radius:4px;font-size:.8rem}
-section{padding:26px 0}
-.panel{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:22px}
-h2{font-size:1.25rem;margin-bottom:6px}
-h2 .num{color:var(--lime);font-family:ui-monospace,monospace;margin-right:8px}
-.hint{color:var(--muted);font-size:.88rem;margin-bottom:16px}
-.tabs{display:flex;gap:8px;margin-bottom:18px}
-.tab{background:var(--panel2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:8px 18px;cursor:pointer;font-size:.92rem;font-weight:600}
-.tab.active{background:var(--lime);color:#0a0e0a;border-color:var(--lime)}
-.sample-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-.sample-btn{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;cursor:pointer;color:var(--text);text-align:left;min-width:150px;flex:1}
-.sample-btn:hover{border-color:var(--lime-dim)}
-.sample-btn.selected{border-color:var(--lime);box-shadow:0 0 0 1px var(--lime)}
-.sample-btn .nm{font-weight:700;font-size:.9rem}
-.sample-btn .ds{color:var(--muted);font-size:.76rem;margin-top:2px}
-.sample-btn .tag{display:inline-block;font-size:.62rem;font-weight:700;letter-spacing:.08em;color:#0a0e0a;background:var(--amber);border-radius:3px;padding:1px 5px;margin-top:6px}
-textarea{width:100%;min-height:170px;background:var(--panel2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:ui-monospace,'Cascadia Mono',Consolas,monospace;font-size:.8rem;padding:12px;resize:vertical}
-textarea:focus{outline:none;border-color:var(--lime-dim)}
-.row{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
-.btn{background:var(--lime);color:#0a0e0a;border:none;border-radius:8px;padding:11px 26px;font-size:.95rem;font-weight:700;cursor:pointer}
-.btn:hover{background:#bef264}
-.btn.ghost{background:transparent;border:1px solid var(--border);color:var(--muted);font-weight:600}
-.btn.ghost:hover{color:var(--text);border-color:var(--lime-dim)}
-.file-label{font-size:.85rem;color:var(--muted)}
-input[type=file]{display:none}
-.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:18px 0}
-.card{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
-.card .lbl{font-size:.72rem;letter-spacing:.08em;color:var(--muted);text-transform:uppercase}
-.card .val{font-size:1.6rem;font-weight:800;margin-top:2px}
-.card .val.small{font-size:1.05rem}
-.score-excellent{color:var(--green)} .score-good{color:var(--lime)}
-.score-attention{color:var(--amber)} .score-critical{color:var(--red)}
-.breakdown{font-family:ui-monospace,monospace;font-size:.8rem;color:var(--muted);background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 14px;margin-bottom:18px}
-.breakdown b{color:var(--text)}
-.chips{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
-.chip{font-size:.78rem;border-radius:20px;padding:4px 12px;border:1px solid var(--border);background:var(--panel2)}
-.chip.crit{border-color:var(--red);color:var(--red)}
-.chip.err{border-color:var(--orange);color:var(--orange)}
-.chip.warn{border-color:var(--amber);color:var(--amber)}
-.chip.cat{color:var(--blue)}
-.tl-wrap{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-bottom:18px;overflow-x:auto}
-.tl-title{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-table{width:100%;border-collapse:collapse;font-size:.85rem;margin-bottom:18px}
-th{text-align:left;color:var(--muted);font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;padding:8px 10px;border-bottom:1px solid var(--border)}
-td{padding:8px 10px;border-bottom:1px solid #17210f;font-family:ui-monospace,monospace;font-size:.8rem}
-tr.slow td{color:var(--red)}
-.flag-slow{color:#0a0e0a;background:var(--red);font-size:.64rem;font-weight:800;border-radius:3px;padding:1px 6px;letter-spacing:.06em}
-.issue{background:var(--panel2);border:1px solid var(--border);border-left:3px solid var(--muted);border-radius:8px;padding:14px 16px;margin-bottom:10px}
-.issue.CRITICAL{border-left-color:var(--red)}
-.issue.ERROR{border-left-color:var(--orange)}
-.issue.WARNING{border-left-color:var(--amber)}
-.issue .head{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:6px}
-.pill{font-size:.64rem;font-weight:800;letter-spacing:.08em;border-radius:4px;padding:2px 7px}
-.pill.CRITICAL{background:var(--red);color:#0a0e0a}
-.pill.ERROR{background:var(--orange);color:#0a0e0a}
-.pill.WARNING{background:var(--amber);color:#0a0e0a}
-.pill.cat{background:transparent;border:1px solid var(--blue);color:var(--blue)}
-.meta{font-size:.72rem;color:var(--muted);font-family:ui-monospace,monospace}
-.issue .msg{font-family:ui-monospace,monospace;font-size:.82rem;word-break:break-word}
-.issue .rec{font-size:.82rem;color:var(--muted);margin-top:6px}
-.issue .rec b{color:var(--lime);font-weight:600}
-.verdict{background:var(--panel2);border:1px solid var(--lime-dim);border-radius:10px;padding:16px 18px;margin-bottom:18px}
-.verdict div{margin:3px 0;font-size:.95rem}
-.cmp-cols{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:14px}
-.cmp-col h3{font-size:.85rem;margin-bottom:8px}
-.cmp-col.fixed h3{color:var(--green)} .cmp-col.introduced h3{color:var(--red)} .cmp-col.persisting h3{color:var(--amber)}
-.cmp-item{background:var(--panel2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;font-size:.78rem;font-family:ui-monospace,monospace;word-break:break-word}
-.empty{color:var(--muted);font-size:.85rem;font-style:italic}
-footer{border-top:1px solid var(--border);margin-top:30px;padding:26px 0 40px;color:var(--muted);font-size:.84rem;text-align:center}
-select{background:var(--panel2);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:9px 12px;font-size:.88rem}
-.vs{color:var(--muted);font-weight:700;align-self:center}
-.hidden{display:none}
-.privacy{font-size:.78rem;color:var(--muted);margin-top:10px}
-.privacy b{color:var(--green);font-weight:600}
-.cmp-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:16px}
-.cmp-side{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px}
-.cmp-side h3{font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);margin-bottom:10px}
-.cmp-side select{width:100%}
-.cmp-side textarea{min-height:140px;margin-top:10px}
-.cmp-side .file-label{display:block;margin-top:6px}
-.dl-row{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0 6px}
-.btn.dl{background:transparent;border:1px solid var(--lime-dim);color:var(--lime);font-weight:600;padding:8px 16px;font-size:.85rem}
-.btn.dl:hover{background:var(--panel2);border-color:var(--lime)}
-.recs{background:var(--panel2);border:1px solid var(--border);border-radius:10px;padding:14px 18px;margin-bottom:18px}
-.recs .recs-title{font-size:.78rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.recs ol{margin:8px 0 0 18px;padding:0}
-.recs li{font-size:.86rem;margin:4px 0}
-.dl-note{font-size:.76rem;color:var(--muted);margin-bottom:14px;margin-top:0}
-.unsupported{background:var(--panel2);border:1px solid var(--amber);border-radius:10px;padding:16px 18px;margin-bottom:18px;font-size:.9rem}
-.unsupported b{color:var(--amber)}
+code{font-family:var(--mono);font-size:.88em;background:#1c2410;border:1px solid var(--line);border-radius:5px;padding:.08em .38em;color:var(--lime)}
+.wrap{max-width:1060px;margin:0 auto;padding:0 22px}
+
+/* top bar */
+.top{border-bottom:1px solid var(--line);background:rgba(10,13,7,.85);backdrop-filter:blur(8px);position:sticky;top:0;z-index:20}
+.top-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:13px 22px;max-width:1060px;margin:0 auto}
+.brand{display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:14px;color:var(--txt)}
+.brand:hover{text-decoration:none}
+.ks{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;border-radius:8px;background:var(--lime);color:#131a05;font-weight:700;font-size:13px;letter-spacing:.02em}
+.brand-name{color:var(--dim)}
+.links{display:flex;align-items:center;gap:18px;font-size:14px}
+.links a{color:var(--dim)}
+.links a:hover{color:var(--lime);text-decoration:none}
+
+/* hero */
+.hero{padding:72px 0 56px;border-bottom:1px solid var(--line)}
+.hero-grid{display:grid;grid-template-columns:1.15fr .85fr;gap:48px;align-items:center}
+.eyebrow{font-family:var(--mono);font-size:12px;letter-spacing:.18em;color:var(--lime2);margin:0 0 18px}
+.hero h1{font-size:clamp(34px,5vw,54px);line-height:1.06;font-weight:800;letter-spacing:-.02em;margin:0 0 20px}
+.hero .accent{color:var(--lime)}
+.hero .sub{font-size:17px;color:var(--dim);max-width:34em;margin:0 0 26px}
+.cta-row{display:flex;gap:12px;flex-wrap:wrap;margin-bottom:18px}
+.badge-line{margin:0}
+.badge-synth{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.14em;color:var(--amber);border:1px solid #4a3d16;background:#1c1607;border-radius:5px;padding:4px 9px}
+
+/* terminal card */
+.term{background:#0c1006;border:1px solid var(--line2);border-radius:12px;overflow:hidden;box-shadow:0 24px 60px -24px rgba(0,0,0,.7),0 0 0 1px rgba(185,243,77,.05)}
+.term-bar{display:flex;align-items:center;gap:7px;padding:11px 14px;background:#131a08;border-bottom:1px solid var(--line)}
+.term-dot{width:11px;height:11px;border-radius:50%;background:#2c3a16}
+.term-dot:first-child{background:#e0645a}.term-dot:nth-child(2){background:#e0b24a}.term-dot:nth-child(3){background:#9dc54a}
+.term-title{margin-left:8px;font-family:var(--mono);font-size:11.5px;color:var(--faint)}
+.term-body{margin:0;padding:18px 18px 20px;font-family:var(--mono);font-size:13px;line-height:1.75;color:#cfe0ab;white-space:pre-wrap;word-break:break-word}
+.t-p{color:var(--lime)}.t-w{color:var(--amber)}.t-s{color:var(--orange)}.t-d{color:var(--faint)}
+
+/* analyzer panel */
+section{padding:8px 0}
+.panel{background:linear-gradient(180deg,var(--panel2),var(--panel));border:1px solid var(--line);border-radius:14px;padding:26px 26px 24px;margin:22px 0;box-shadow:0 18px 50px -30px rgba(0,0,0,.8)}
+.panel.soft{background:var(--bg2)}
+h2{font-size:20px;font-weight:700;letter-spacing:-.01em;margin:4px 0 12px;display:flex;align-items:center;gap:11px}
+h2 .num{display:inline-flex;align-items:center;justify-content:center;min-width:26px;height:26px;border-radius:7px;background:#1e2810;border:1px solid var(--line2);color:var(--lime);font-family:var(--mono);font-size:13px;font-weight:600}
+.hint{color:var(--dim);font-size:14px;margin:0 0 16px;max-width:64em}
+.tabs{display:flex;gap:8px;border-bottom:1px solid var(--line);margin:-6px -6px 18px;padding:0 6px}
+.tab{background:none;border:none;border-bottom:2px solid transparent;color:var(--faint);font-family:var(--mono);font-size:13px;letter-spacing:.06em;padding:10px 12px;cursor:pointer}
+.tab.active{color:var(--lime);border-bottom-color:var(--lime)}
+
+.sample-row{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 14px}
+.sample-row .chip{cursor:pointer}
+.chip{display:inline-flex;align-items:center;gap:6px;font-family:var(--mono);font-size:12.5px;color:var(--dim);background:#161d0c;border:1px solid var(--line2);border-radius:999px;padding:7px 14px;transition:border-color .15s,color .15s,background .15s}
+.chip:hover{border-color:var(--lime-dim);color:var(--txt)}
+.chip.selected{background:#22300f;border-color:var(--lime2);color:var(--lime)}
+.chip.crit{color:var(--red);border-color:#5a2320;background:#1d0f0d}
+.chip.err{color:var(--orange);border-color:#59331b;background:#1d130a}
+.chip.warn{color:var(--amber);border-color:#4a3d16;background:#1b1608}
+.chip.cat{color:var(--lime);border-color:var(--line2)}
+
+textarea#log-input{width:100%;min-height:210px;resize:vertical;background:#0b0f06;color:#d7e6b8;border:1px solid var(--line2);border-radius:10px;padding:14px 15px;font-family:var(--mono);font-size:13px;line-height:1.6;outline:none;transition:border-color .15s, box-shadow .15s}
+textarea#log-input:focus{border-color:var(--lime2);box-shadow:0 0 0 3px rgba(185,243,77,.12)}
+textarea#log-input::placeholder{color:var(--faint)}
+.row{display:flex;align-items:center;gap:11px;flex-wrap:wrap;margin-top:14px}
+.btn{display:inline-flex;align-items:center;gap:8px;background:var(--lime);color:#142004;border:none;border-radius:9px;font-family:var(--sans);font-weight:700;font-size:14.5px;padding:11px 22px;cursor:pointer;transition:background .15s,transform .05s}
+.btn:hover{background:#cafa70;text-decoration:none}
+.btn:active{transform:translateY(1px)}
+.btn.ghost{background:transparent;color:var(--lime);border:1px solid var(--line2)}
+.btn.ghost:hover{border-color:var(--lime2);background:#161d0c}
+.btn.dl{background:transparent;color:var(--txt);border:1px solid var(--line2);font-weight:600;font-size:13px;padding:8px 14px}
+.btn.dl:hover{border-color:var(--lime2);color:var(--lime)}
+#file-input{display:none}
+.file-label{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.privacy{margin:16px 0 0;font-size:13px;color:var(--faint);border-top:1px dashed var(--line);padding-top:13px}
+.privacy b{color:var(--dim)}
+
+/* results */
+#results.hidden{display:none}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:16px 0 20px}
+.card{background:#0d1207;border:1px solid var(--line);border-radius:11px;padding:15px 16px}
+.card .num{font-family:var(--mono);font-size:27px;font-weight:700;color:var(--lime);letter-spacing:-.02em}
+.card .lbl{font-size:12px;color:var(--faint);margin-top:3px;text-transform:uppercase;letter-spacing:.09em}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:10px 0 18px}
+table{width:100%;border-collapse:collapse;margin:8px 0 18px;font-size:14px}
+th{font-family:var(--mono);font-size:11px;text-transform:uppercase;letter-spacing:.12em;color:var(--faint);text-align:left;padding:8px 10px;border-bottom:1px solid var(--line2)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);color:var(--txt);vertical-align:top}
+td:first-child{font-family:var(--mono);font-size:13px;color:#cfe0ab}
+tr:last-child td{border-bottom:none}
+.flag-slow{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;color:#142004;background:var(--orange);border-radius:4px;padding:2px 7px;font-weight:700}
+.issue{border:1px solid var(--line);border-left:3px solid var(--faint);border-radius:9px;background:#0e1308;padding:12px 15px;margin:0 0 10px}
+.issue.critical{border-left-color:var(--red)}
+.issue.error{border-left-color:var(--orange)}
+.issue.warning{border-left-color:var(--amber)}
+.issue-head{display:flex;align-items:center;gap:9px;flex-wrap:wrap;margin-bottom:5px}
+.pill{font-family:var(--mono);font-size:10.5px;font-weight:700;letter-spacing:.1em;border-radius:4px;padding:2.5px 8px}
+.pill.critical{color:#ffd9d5;background:#3a1512}
+.pill.error{color:#ffd9c2;background:#3a2110}
+.pill.warning{color:#f7e2ae;background:#33290c}
+.pill.cat{color:var(--lime);background:#1e2a0e}
+.issue .nm{font-family:var(--mono);font-size:12.5px;color:var(--dim)}
+.issue .msg{font-size:14.5px;color:var(--txt)}
+.issue .meta{font-size:12.5px;color:var(--faint);margin-top:5px}
+.issue .meta .ts{font-family:var(--mono)}
+.ds{font-family:var(--mono);font-size:12px;color:var(--faint);margin-top:6px}
+.ds .val{color:var(--amber)}
+.recs{margin:14px 0 4px}
+.recs-title{font-size:15px;font-weight:700;margin:18px 0 8px}
+.rec{font-size:14px;color:var(--dim);padding:7px 0 7px 22px;position:relative;border-bottom:1px dashed var(--line)}
+.rec:before{content:"→";position:absolute;left:2px;color:var(--lime)}
+.rec:last-child{border-bottom:none}
+.empty{color:var(--dim);font-size:14px;padding:14px;border:1px dashed var(--line2);border-radius:9px;background:#0e1308}
+.note{color:var(--dim);font-size:13.5px;background:#141b09;border:1px solid var(--line);border-left:3px solid var(--lime2);border-radius:8px;padding:11px 14px;margin:12px 0}
+.unsupported{border:1px solid #4a3d16;border-left:3px solid var(--amber);background:#171307;border-radius:9px;padding:14px 16px;margin:12px 0}
+.dl-row{display:flex;flex-wrap:wrap;gap:10px;margin-top:18px;padding-top:16px;border-top:1px solid var(--line)}
+.dl-note{width:100%;font-size:12.5px;color:var(--faint);margin:2px 0 0}
+.badge{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.12em;color:var(--amber);border:1px solid #4a3d16;border-radius:4px;padding:2px 7px}
+.tag{font-family:var(--mono);font-size:11px;color:var(--faint);border:1px solid var(--line);border-radius:4px;padding:1px 6px}
+.muted{color:var(--faint)}
+.head{margin-bottom:6px}
+
+.sample-btn{flex:1 1 200px;text-align:left;background:#0d1207;border:1px solid var(--line2);border-radius:10px;padding:12px 14px;cursor:pointer;transition:border-color .15s,background .15s;color:var(--txt);font-family:var(--sans)}
+.sample-btn:hover{border-color:var(--lime-dim);background:#111808}
+.sample-btn.selected{border-color:var(--lime);background:#1a260c;box-shadow:0 0 0 1px var(--lime) inset}
+.sample-btn .nm{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--lime);margin-bottom:4px}
+.sample-btn .ds{font-size:12px;color:var(--faint);line-height:1.45;margin-bottom:7px}
+.sample-btn .tag{font-size:9.5px;letter-spacing:.12em;color:var(--amber);border:1px solid #4a3d16;border-radius:4px;padding:1.5px 6px}
+
+/* samples / links section */
+.link-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+.link-card{display:block;background:#0d1207;border:1px solid var(--line);border-radius:11px;padding:16px 18px;transition:border-color .15s}
+.link-card:hover{border-color:var(--lime2);text-decoration:none}
+.link-card .lc-t{font-family:var(--mono);font-size:14px;color:var(--lime);margin-bottom:5px}
+.link-card .lc-d{font-size:13.5px;color:var(--dim)}
+.cli-line{margin-top:14px;font-family:var(--mono);font-size:13px;color:#cfe0ab;background:#0b0f06;border:1px solid var(--line2);border-radius:9px;padding:12px 15px}
+.cli-line .t-p{color:var(--lime)}
+
+footer{border-top:1px solid var(--line);margin-top:34px;padding:26px 0 40px;color:var(--faint);font-size:13.5px}
+.wm{position:fixed;right:12px;bottom:10px;z-index:40;font-family:var(--mono);font-size:10px;letter-spacing:.04em;color:#7b8f5f;background:rgba(10,13,7,.72);border:1px solid var(--line);border-radius:6px;padding:3px 8px;pointer-events:none}
+@media (max-width:860px){.wm{font-size:9px;right:8px;bottom:8px}}
+footer a{color:var(--dim)}
+footer a:hover{color:var(--lime)}
+
+@media (max-width:860px){
+  .hero-grid{grid-template-columns:1fr;gap:30px}
+  .hero{padding:48px 0 40px}
+  .link-grid{grid-template-columns:1fr}
+  .links{gap:12px;font-size:13px}
+  .brand-name{display:none}
+}
 </style>
 </head>
 <body>
 <header class="top">
-  <div class="wrap">
-    <div class="brand"><span class="ks">KS</span> / android-boot-log-analyzer</div>
+  <div class="top-row">
+    <a class="brand" href="https://github.com/KanishkSaini-007/android-boot-log-analyzer"><span class="ks">KS</span><span class="brand-name">/ android-boot-log-analyzer</span></a>
     <nav class="links">
+      <a href="#try">Try it</a>
+      <a href="#samples">Samples</a>
       <a href="https://github.com/KanishkSaini-007/android-boot-log-analyzer">GitHub repo</a>
       <a href="https://kanishksaini-007.github.io/portfolio/">Portfolio</a>
-      <span class="badge-synth">SAMPLES ARE SYNTHETIC</span>
     </nav>
   </div>
 </header>
 
-<div class="hero">
-  <h1>Android Boot Log Analyzer <span class="accent">- full web tool</span></h1>
-  <p class="sub">Analyze real Android boot logs (dmesg or logcat) right here: issues found and classified,
-  boot-stage timing with slow stages flagged, and the
-  same HTML/JSON reports the CLI writes, ready to download.
-  Everything runs in your browser.</p>
-  <p class="note">This page is a faithful JavaScript port of the Python CLI in the repo - same parser, same rules,
-  same math, with output checked against the CLI itself. Run the original with Python 3.10+: <code>python3 -m bootlog_analyzer your.log</code></p>
-</div>
+<section class="hero">
+  <div class="wrap hero-grid">
+    <div>
+      <p class="eyebrow">DMESG &middot; LOGCAT &middot; BOOT TIMING &mdash; RULE-BASED, RUNS OFFLINE</p>
+      <h1>Your Android's first minute,<br><span class="accent">turned into a clear report.</span></h1>
+      <p class="sub">Paste a boot log and get the warnings that matter, the stages that ran slow, and a
+      report you can download or hand in. This page is a JavaScript port of the Python CLI in the repo -
+      built to match its output, and checked against it on the bundled samples.</p>
+      <div class="cta-row">
+        <a class="btn" href="#try">Analyze a log</a>
+        <a class="btn ghost" href="https://github.com/KanishkSaini-007/android-boot-log-analyzer">View the source</a>
+      </div>
+      <p class="badge-line"><span class="badge-synth">BUNDLED SAMPLES ARE SYNTHETIC</span></p>
+    </div>
+    <div class="term" aria-hidden="true">
+      <div class="term-bar"><span class="term-dot"></span><span class="term-dot"></span><span class="term-dot"></span><span class="term-title">real output &middot; bundled synthetic log</span></div>
+      <pre class="term-body"><span class="t-p">$</span> python3 -m bootlog_analyzer samples/boot_slow.log
+<span class="t-w">WARN</span>  Failed to scan /system_ext/priv-app/Ripple:
+      collecting certificates took 6201 ms
+<span class="t-w">WARN</span>  Device is low on storage: 91% full
+<span class="t-s">SLOW</span>  stage screen_on took 16.2s
+<span class="t-s">SLOW</span>  stage PackageManager took 6.2s
+<span class="t-d">----</span>  4 issues &middot; boot span 42.0s &middot; 3 slow stages
+<span class="t-p">&rarr;</span>  boot_slow_report.html written</pre>
+    </div>
+  </div>
+</section>
 
 <div class="wrap">
-<section>
+<section id="try">
   <div class="panel">
     <div class="tabs">
       <button class="tab active" id="tab-analyze">Analyze a log</button>
@@ -168,8 +235,32 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 <section id="results" class="hidden">
   <div class="panel" id="results-body"></div>
 </section>
+
+<section id="samples">
+  <div class="panel soft">
+    <h2><span class="num">3</span>Sample logs and finished reports</h2>
+    <p class="hint">Four hand-written synthetic boots ship with the repo - healthy, slow, failing and fixed - each
+    with the exact HTML and JSON report the CLI generates for it.</p>
+    <div class="link-grid">
+      <a class="link-card" href="sample-report.html">
+        <div class="lc-t">sample-report.html &rarr;</div>
+        <div class="lc-d">The finished report for the slow-boot sample, served right here - open it in your browser.</div>
+      </a>
+      <a class="link-card" href="https://github.com/KanishkSaini-007/android-boot-log-analyzer/tree/main/sample_logs">
+        <div class="lc-t">sample_logs/ &rarr;</div>
+        <div class="lc-d">The four synthetic boot logs, same ones bundled above.</div>
+      </a>
+      <a class="link-card" href="https://github.com/KanishkSaini-007/android-boot-log-analyzer/tree/main/reports">
+        <div class="lc-t">reports/ &rarr;</div>
+        <div class="lc-d">The generated diagnostic reports - HTML to read, JSON to reuse.</div>
+      </a>
+    </div>
+    <div class="cli-line"><span class="t-p">$</span> python3 -m bootlog_analyzer your.log&nbsp;&nbsp;<span class="muted"># same engine, no size limit</span></div>
+  </div>
+</section>
 </div>
 
+<div class="wm">Kanishk Saini &times; Instinct</div>
 <footer>
   <div class="wrap">
     Built by <a href="https://github.com/KanishkSaini-007">Kanishk Saini</a> as a learning project.
