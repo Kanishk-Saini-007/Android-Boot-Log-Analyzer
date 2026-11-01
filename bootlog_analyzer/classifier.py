@@ -41,16 +41,6 @@ RULES = [
         "Investigate the kernel error: check recent kernel, config or "
         "hardware changes and capture a full dmesg around the failure.",
     ),
-    (
-        "system",
-        [
-            "init:", "servicemanager", "vold", "netd", "zygote",
-            "system_server", "surfaceflinger", "audioserver", "healthd",
-            "lmkd", "android runtime", "watchdog",
-        ],
-        "Review the failing system service: check its init .rc entry, "
-        "dependencies and restart policy.",
-    ),
 ]
 
 DEFAULT_RECOMMENDATION = (
@@ -62,7 +52,6 @@ CATEGORY_LABELS = {
     "driver": "Driver",
     "firmware": "Firmware",
     "selinux": "SELinux",
-    "system": "System",
     "other": "Other",
 }
 
