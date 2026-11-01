@@ -20,7 +20,7 @@ class LogEntry:
 class Issue:
     """A detected problem worth showing in the report."""
     severity: str                    # WARNING, ERROR, CRITICAL
-    category: str                    # kernel, driver, firmware, selinux, system, other
+    category: str                    # kernel, driver, firmware, selinux, other
     message: str
     recommendation: str
     timestamp: Optional[float] = None
