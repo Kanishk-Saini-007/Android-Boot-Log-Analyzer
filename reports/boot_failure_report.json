@@ -14,14 +14,7 @@
       "driver": 4,
       "kernel": 1,
       "selinux": 1
-    },
-    "boot_health_score": 5,
-    "boot_health_grade": "Critical",
-    "score_breakdown": [
-      "1 x CRITICAL (-25 each) = -25",
-      "6 x ERROR (-10 each) = -60",
-      "2 x slow stage (-5 each, capped) = -10"
-    ]
+    }
   },
   "boot_timing": {
     "duration_seconds": 42.01,
@@ -157,4 +150,4 @@
     "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
     "Investigate slow boot stages: selinux_setup (9.9s), core_services (29.7s)"
   ]
-}
+      }
