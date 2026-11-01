@@ -591,7 +591,7 @@ var SAMPLES = {"boot_failure": "[    0.000000] boot: Linux version 6.1.25-androi
 
 var SAMPLE_META = {
   boot_failure: {name: 'boot_failure.log', desc: 'dmesg - firmware load failure, driver probe errors, SELinux denial, CPU soft lockup', synth: true},
-  boot_fixed:   {name: 'boot_fixed.log',   desc: 'dmesg - the same boot after the fixes (same boot after fixes)', synth: true},
+  boot_fixed:   {name: 'boot_fixed.log',   desc: 'dmesg - the same boot after the fixes', synth: true},
   boot_slow:    {name: 'boot_slow.log',    desc: 'logcat - 42s boot with a 14.5s package scan', synth: true},
   boot_healthy: {name: 'boot_healthy.log', desc: 'logcat - clean 9s boot, no issues', synth: true}
 };
@@ -775,4 +775,4 @@ function showResults(){
 buildSamples();
 </script>
 </body>
-</html>
+                 </html>
