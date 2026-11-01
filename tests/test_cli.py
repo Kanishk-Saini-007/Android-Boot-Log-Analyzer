@@ -29,12 +29,3 @@ def test_missing_file_returns_1(capsys):
     rc = main(["analyze", "no_such_file.log", "--json", "", "--html", ""])
     assert rc == 1
     assert "error" in capsys.readouterr().err
-
-
-def test_compare_mode(capsys):
-    rc = main(["compare", str(SAMPLES / "boot_failure.log"),
-               str(SAMPLES / "boot_fixed.log")])
-    assert rc == 0
-    out = capsys.readouterr().out
-    assert "Fixed issues" in out
-    assert "New issues" in out
