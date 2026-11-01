@@ -18,10 +18,6 @@ h2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }
 .card .num { font-size:30px; font-weight:700; }
 .card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;
   letter-spacing:.06em; }
-.timeline { width:100%; background:var(--card); border:1px solid var(--line);
-  border-radius:12px; }
-.stage-label { font-size:10.5px; fill:#0b0f14; font-weight:600; }
-.axis { font-size:11px; fill:var(--muted); }
 table { width:100%; border-collapse:collapse; background:var(--card);
   border-radius:12px; overflow:hidden; }
 th, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }
@@ -52,14 +48,7 @@ footer { margin-top:40px; color:var(--muted); font-size:12.5px; }
     <div class="lbl">Total boot time</div></div>
   <div class="card"><div class="num">0 / 0 / 4</div>
     <div class="lbl">Critical / Error / Warning</div></div>
-  <div class="card"><div class="num" style="color:#ffd447">78</div>
-    <div class="lbl">Boot Health Score (Good)</div></div>
 </div>
-<p class="muted" style="margin-top:10px">Score math: start at 100; 4 x WARNING (-3 each) = -12; 2 x slow stage (-5 each, capped) = -10.</p>
-
-<h2>Boot timeline</h2>
-<svg viewBox='0 0 960 120' class='timeline' role='img' aria-label='Boot timeline'><rect x='90.0' y='46' width='24.3' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>zygote_start: 1.20s</title></rect><rect x='114.3' y='46' width='72.9' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>preload: 3.60s</title></rect><text x='119.3' y='63' class='stage-label'>preload 3.6s</text><rect x='187.1' y='46' width='4.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>preload_done: 0.20s</title></rect><rect x='191.2' y='46' width='8.1' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>system_server: 0.40s</title></rect><rect x='199.3' y='46' width='293.5' height='26' rx='4' fill='#ff4d5e' opacity='0.85'><title>package_scan: 14.50s</title></rect><text x='204.3' y='63' class='stage-label'>package scan 14.5s</text><rect x='492.7' y='46' width='8.1' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>package_scan_done: 0.40s</title></rect><rect x='500.8' y='46' width='36.4' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>package_ready: 1.80s</title></rect><rect x='537.3' y='46' width='74.9' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>activity_manager: 3.70s</title></rect><text x='542.3' y='63' class='stage-label'>activity manager 3.7s</text><rect x='612.1' y='46' width='327.9' height='26' rx='4' fill='#ff4d5e' opacity='0.85'><title>screen_on: 16.20s</title></rect><text x='617.1' y='63' class='stage-label'>screen on 16.2s</text><rect x='940.0' y='46' width='2.0' height='26' rx='4' fill='#a3e635' opacity='0.85'><title>boot_complete: 0.00s</title></rect><circle cx='330.8' cy='90' r='5' fill='#ffd447' stroke='#0b0f14' stroke-width='1.5'><title>[WARNING] other: Failed to scan /system_ext/priv-app/Ripple: collecting certificates took 6201 ms</title></circle><circle cx='555.5' cy='90' r='5' fill='#ffd447' stroke='#0b0f14' stroke-width='1.5'><title>[WARNING] other: Slow operation: 2340ms so far, now at startOtherServices</title></circle><circle cx='585.8' cy='90' r='5' fill='#ffd447' stroke='#0b0f14' stroke-width='1.5'><title>[WARNING] other: Device is low on storage: 91% full</title></circle><circle cx='867.1' cy='90' r='5' fill='#ffd447' stroke='#0b0f14' stroke-width='1.5'><title>[WARNING] driver: Timeout executing service: ServiceRecord{u0 com.android.bluetooth/.btservice.AdapterService}</title></circle><text x='90' y='36' class='axis'>0s</text><text x='920' y='36' class='axis'>42.0s</text></svg>
-<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>
 
 <h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr><tr class=><td>zygote start</td><td>0.00s</td><td>1.20s</td><td>1.20s</td><td></td></tr><tr class=><td>preload</td><td>1.20s</td><td>4.80s</td><td>3.60s</td><td></td></tr><tr class=><td>preload done</td><td>4.80s</td><td>5.00s</td><td>0.20s</td><td></td></tr><tr class=><td>system server</td><td>5.00s</td><td>5.40s</td><td>0.40s</td><td></td></tr><tr class=slow><td>package scan</td><td>5.40s</td><td>19.90s</td><td>14.50s</td><td>SLOW</td></tr><tr class=><td>package scan done</td><td>19.90s</td><td>20.30s</td><td>0.40s</td><td></td></tr><tr class=><td>package ready</td><td>20.30s</td><td>22.10s</td><td>1.80s</td><td></td></tr><tr class=><td>activity manager</td><td>22.10s</td><td>25.80s</td><td>3.70s</td><td></td></tr><tr class=slow><td>screen on</td><td>25.80s</td><td>42.00s</td><td>16.20s</td><td>SLOW</td></tr><tr class=><td>boot complete</td><td>42.00s</td><td>42.00s</td><td>0.00s</td><td></td></tr></table>
 
