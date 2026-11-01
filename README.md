@@ -10,15 +10,14 @@ in the report can be traced back to a line in the log.
 
 ## Try it in your browser
 
-The whole analyzer also runs as a web page - no install, and your logs are
-never uploaded anywhere:
+The analyzer also runs as a web page - no install, and your logs are never
+uploaded anywhere:
 **<https://kanishksaini-007.github.io/android-boot-log-analyzer/>**
 
-Paste or load your own `dmesg`/`logcat` output, analyze it, compare two
-boots, and download the same HTML/JSON reports the CLI writes. The page
-(`docs/index.html`, served with GitHub Pages) is a JavaScript port of this
-exact package, with its output checked against the CLI. The bundled sample
-logs are synthetic, and are labeled as such on the page.
+Paste or load your own `dmesg`/`logcat` output, analyze it, and download the
+same HTML/JSON reports the CLI writes. The page (`docs/index.html`, served
+with GitHub Pages) is a JavaScript port of this exact package. The bundled
+sample logs are synthetic, and are labeled as such on the page.
 
 ## The problem
 
@@ -37,25 +36,14 @@ The five core pieces:
    and promotes patterns that are never benign during boot (SELinux denials,
    explicit "failed"/"error" wording).
 3. **Error Classifier** - categorizes issues as **kernel**, **driver**,
-   **firmware**, **SELinux**, **system** or **other**, with a concrete
-   recommendation for each category.
+   **firmware** or **SELinux**, with a concrete recommendation for each
+   category. Anything that matches no rule is reported as **other** so no
+   detected issue is silently dropped.
 4. **Boot Time Analyzer** - measures every boot stage from the log's own
    timestamps (kernel, init, zygote, package scan, activity manager, screen
    on, boot complete) and flags slow stages.
 5. **Report Generator** - writes a self-contained **HTML** report and a
    machine-readable **JSON** report.
-
-Three extras on top:
-
-- **Boot timeline** - the HTML report draws an SVG timeline: stages as bars
-  (slow ones in red) and issues as dots at the exact moment they fired. One
-  glance shows where the boot spent its time and where failures clustered.
-- **Boot Health Score (0-100)** - a transparent grade with the exact math
-  printed next to it (`100 - 25 per CRITICAL - 10 per ERROR - 3 per WARNING
-  - 5 per slow stage`). No black box.
-- **Compare mode** - diff two boot logs to see which issues are new, which
-  are fixed, and whether the boot got faster or slower. The question every
-  developer asks after a change.
 
 ## Quickstart
 
@@ -72,10 +60,6 @@ python3 -m bootlog_analyzer sample_logs/boot_failure.log
 # Choose output paths
 python3 -m bootlog_analyzer analyze sample_logs/boot_slow.log \
     --json reports/my_report.json --html reports/my_report.html
-
-# Compare two boots (before/after a change)
-python3 -m bootlog_analyzer compare sample_logs/boot_failure.log \
-    sample_logs/boot_fixed.log
 ```
 
 ## Collecting real logs with ADB
@@ -104,11 +88,10 @@ Boot Diagnostic Report
 * Driver issues: 4
 * Firmware issue: 1
 * SELinux issue: 1
-* Boot Health Score: 5/100 (Critical)
 
 Slow boot stages:
-* selinux setup: 9.9s
-* core services: 29.7s
+* selinux_setup: 9.9s
+* core_services: 29.7s
 
 Recommendations
 * Check firmware availability: confirm the firmware file exists under
@@ -121,10 +104,9 @@ Recommendations
   instead of disabling enforcement.
 ```
 
-The HTML version of the same report shows the boot timeline, stage table,
-issue cards and recommendations. See [`reports/`](reports/) for generated
-HTML and JSON reports for every sample log, plus a compare-mode example
-(`compare_failure_vs_fixed.json`).
+The HTML version of the same report shows the summary cards, boot-stage
+table, issue cards and recommendations. See [`reports/`](reports/) for
+generated HTML and JSON reports for every sample log.
 
 ## Sample logs
 
@@ -135,9 +117,9 @@ illustrative, not measurements of a real device.
 | File | Format | What it demonstrates |
 | --- | --- | --- |
 | `boot_failure.log` | dmesg | Firmware load failure, driver probe errors, SELinux denial, CPU soft lockup |
-| `boot_fixed.log` | dmesg | The same boot after the fixes - use with `compare` |
+| `boot_fixed.log` | dmesg | The same boot after the fixes - a clean kernel log |
 | `boot_slow.log` | logcat | 42s boot with a 14.5s package scan and other slow stages |
-| `boot_healthy.log` | logcat | Clean 9s boot, health score 100 |
+| `boot_healthy.log` | logcat | Clean 9s boot with no detected issues |
 
 ## How it works
 
@@ -157,10 +139,8 @@ The analyzer mirrors the real Android boot sequence
    booting (`boot_progress_*`, `sys.boot_completed=1`, kernel milestones).
    A stage's duration is simply the distance to the next marker, and a
    stage is slow when it takes 5+ seconds and at least 10% of the boot.
-5. `score.py` computes the Boot Health Score. The formula is five lines and
-   printed in full in every report.
-6. `report.py` renders the JSON report and the single-file HTML report
-   (inline CSS + SVG, no JavaScript, no network).
+5. `report.py` renders the JSON report and the single-file HTML report
+   (inline CSS, no JavaScript, no network).
 
 ## Project structure
 
@@ -168,15 +148,13 @@ The analyzer mirrors the real Android boot sequence
 bootlog_analyzer/
   parser.py       # log reader: dmesg + logcat -> structured entries
   detector.py     # error detector: ERROR / WARNING / CRITICAL
-  classifier.py   # error classifier: kernel, driver, firmware, selinux, ...
+  classifier.py   # error classifier: kernel, driver, firmware, selinux
   boot_time.py    # boot time analyzer: stage durations, slow stages
-  score.py        # boot health score (0-100, fully explained)
-  compare.py      # compare two boots: new/fixed issues, verdict
   report.py       # HTML + JSON report generation
   cli.py          # command line interface
 sample_logs/      # synthetic logs with known failures (see table above)
 reports/          # generated sample reports (HTML + JSON)
-tests/            # 30 pytest tests covering every module
+tests/            # 25 pytest tests covering every module
 ```
 
 ## Running the tests
