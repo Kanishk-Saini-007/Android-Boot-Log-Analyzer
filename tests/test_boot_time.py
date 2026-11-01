@@ -1,3 +1,5 @@
+import pytest
+
 from bootlog_analyzer.boot_time import analyze
 from bootlog_analyzer.parser import parse_text
 
@@ -33,3 +35,45 @@ def test_missing_markers_still_reports_elapsed():
     timing = analyze(entries)
     assert timing.duration == 3.0
     assert timing.stages == []
+
+
+def test_explicit_duration_line_becomes_stage():
+    entries = parse_text(
+        "[    0.0] boot: Linux version x\n"
+        "[    3.0] init: processing action (late-fs) took 1450ms\n"
+        "[   42.0] init: processing action (sys.boot_completed=1)\n")
+    timing = analyze(entries)
+    stage = next(s for s in timing.stages if s.name == "action late-fs")
+    assert stage.duration == 1.45
+    assert not stage.slow  # 1.45s of a 42s boot is not slow
+
+
+def test_explicit_duration_can_be_flagged_slow():
+    entries = parse_text(
+        "[    0.0] boot: Linux version x\n"
+        "[   30.0] init: processing action (late-fs) took 12000ms\n"
+        "[   42.0] init: processing action (sys.boot_completed=1)\n")
+    timing = analyze(entries)
+    stage = next(s for s in timing.stages if s.name == "action late-fs")
+    assert stage.slow
+    assert stage.duration == 12.0
+
+
+def test_explicit_service_duration_is_captured():
+    entries = parse_text(
+        "[    0.0] boot: Linux version x\n"
+        "[    9.5] init: Service 'wificond' took 2.5s\n"
+        "[   42.0] Boot completed\n")
+    timing = analyze(entries)
+    stage = next(s for s in timing.stages if s.name == "service wificond")
+    assert stage.duration == 2.5
+
+
+def test_sparse_log_does_not_fabricate_whole_boot_stage():
+    entries = parse_text(
+        "[    0.0] boot: Linux version x\n"
+        "[   42.0] Boot completed\n")
+    timing = analyze(entries)
+    assert not any(s.slow and s.duration >= 0.9 * timing.duration
+                   for s in timing.stages)
+    assert "no intermediate boot markers" in timing.note
