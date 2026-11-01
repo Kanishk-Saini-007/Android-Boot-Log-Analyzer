@@ -4,7 +4,7 @@ A Python tool that reads Android boot logs (`dmesg` and `logcat`), finds the
 errors that matter, explains why a device might be booting slowly or failing
 to boot, and generates a diagnostic report in HTML and JSON.
 
-Built by [Kanishk Saini](https://github.com/KanishkSaini-007) as a learning
+Built by [Kanishk Saini](https://github.com/Kanishk-Saini-007) as a learning
 project. Everything in this repo is rule-based and explainable - every number
 in the report can be traced back to a line in the log.
 
@@ -12,7 +12,7 @@ in the report can be traced back to a line in the log.
 
 The analyzer also runs as a web page - no install, and your logs are never
 uploaded anywhere:
-**<https://kanishksaini-007.github.io/android-boot-log-analyzer/>**
+**<https://kanishk-saini-007.github.io/android-boot-log-analyzer/>**
 
 Paste or load your own `dmesg`/`logcat` output, analyze it, and download the
 same HTML/JSON reports the CLI writes. The page (`docs/index.html`, served
@@ -51,7 +51,7 @@ Requires Python 3.10+. No runtime dependencies - the analyzer is pure
 standard library.
 
 ```bash
-git clone https://github.com/KanishkSaini-007/android-boot-log-analyzer.git
+git clone https://github.com/Kanishk-Saini-007/android-boot-log-analyzer.git
 cd android-boot-log-analyzer
 
 # Analyze a log (writes report.html and report.json)
