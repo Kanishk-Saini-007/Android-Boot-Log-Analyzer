@@ -12,13 +12,7 @@
     "counts_by_category": {
       "other": 3,
       "driver": 1
-    },
-    "boot_health_score": 78,
-    "boot_health_grade": "Good",
-    "score_breakdown": [
-      "4 x WARNING (-3 each) = -12",
-      "2 x slow stage (-5 each, capped) = -10"
-    ]
+    }
   },
   "boot_timing": {
     "duration_seconds": 42.0,
