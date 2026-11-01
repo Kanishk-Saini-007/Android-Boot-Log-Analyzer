@@ -9,10 +9,7 @@
       "ERROR": 0,
       "WARNING": 0
     },
-    "counts_by_category": {},
-    "boot_health_score": 100,
-    "boot_health_grade": "Excellent",
-    "score_breakdown": []
+    "counts_by_category": {}
   },
   "boot_timing": {
     "duration_seconds": 8.9,
