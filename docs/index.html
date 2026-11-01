@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Android Boot Log Analyzer - Full Web Tool</title>
-<meta name="description" content="Analyze Android boot logs in your browser: parse dmesg/logcat, detect and classify issues, measure boot stages, score boot health, compare two boots, and download the same HTML/JSON reports the Python CLI writes.">
+<meta name="description" content="Analyze Android boot logs in your browser: parse dmesg/logcat, detect and classify issues, measure boot stages, and download the same HTML/JSON reports the Python CLI writes.">
 <style>
 :root{
   --bg:#0a0e0a; --panel:#10170f; --panel2:#0d130c; --border:#22301c;
@@ -134,8 +134,8 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 <div class="hero">
   <h1>Android Boot Log Analyzer <span class="accent">- full web tool</span></h1>
   <p class="sub">Analyze real Android boot logs (dmesg or logcat) right here: issues found and classified,
-  boot-stage timing with slow stages flagged, a visual timeline, a transparent 0-100 health score, and the
-  same HTML/JSON reports the CLI writes, ready to download. Compare two boots to see exactly what got fixed.
+  boot-stage timing with slow stages flagged, and the
+  same HTML/JSON reports the CLI writes, ready to download.
   Everything runs in your browser.</p>
   <p class="note">This page is a faithful JavaScript port of the Python CLI in the repo - same parser, same rules,
   same math, with output checked against the CLI itself. Run the original with Python 3.10+: <code>python3 -m bootlog_analyzer your.log</code></p>
@@ -145,8 +145,7 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 <section>
   <div class="panel">
     <div class="tabs">
-      <button class="tab active" id="tab-analyze" onclick="setMode('analyze')">Analyze a log</button>
-      <button class="tab" id="tab-compare" onclick="setMode('compare')">Compare two boots</button>
+      <button class="tab active" id="tab-analyze">Analyze a log</button>
     </div>
 
     <div id="mode-analyze">
@@ -163,37 +162,6 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
       <p class="privacy"><b>Private by design:</b> analysis runs entirely in your browser. No log data is uploaded anywhere.</p>
     </div>
 
-    <div id="mode-compare" class="hidden">
-      <h2><span class="num">1</span>Pick a before and after log</h2>
-      <p class="hint">Compare mode answers "did the boot get better or worse?" - which issues were fixed, which are new,
-      and how the time and score moved. Use the synthetic samples or your own two logs (for example one captured before
-      a fix and one after). Your logs never leave this page. Limit per log: 1 MB / 20,000 lines.</p>
-      <div class="cmp-grid">
-        <div class="cmp-side">
-          <h3>Before</h3>
-          <select id="cmp-old-sample"></select>
-          <textarea id="cmp-old-input" placeholder="Paste the 'before' log (dmesg or logcat)..." spellcheck="false"></textarea>
-          <div class="row">
-            <button class="btn ghost" onclick="document.getElementById('cmp-old-file').click()">Load .log file</button>
-            <input type="file" id="cmp-old-file" accept=".log,.txt,text/plain">
-          </div>
-          <span class="file-label" id="cmp-old-label"></span>
-        </div>
-        <div class="cmp-side">
-          <h3>After</h3>
-          <select id="cmp-new-sample"></select>
-          <textarea id="cmp-new-input" placeholder="Paste the 'after' log (dmesg or logcat)..." spellcheck="false"></textarea>
-          <div class="row">
-            <button class="btn ghost" onclick="document.getElementById('cmp-new-file').click()">Load .log file</button>
-            <input type="file" id="cmp-new-file" accept=".log,.txt,text/plain">
-          </div>
-          <span class="file-label" id="cmp-new-label"></span>
-        </div>
-      </div>
-      <div class="row">
-        <button class="btn" onclick="runCompare()">Compare</button>
-      </div>
-    </div>
   </div>
 </section>
 
@@ -213,7 +181,7 @@ select{background:var(--panel2);border:1px solid var(--border);color:var(--text)
 <script>
 /* Android Boot Log Analyzer - browser port of the Python CLI.
    Faithful port of the bootlog_analyzer package (parser, detector,
-   classifier, boot_time, score, compare). Same rules, same math. */
+   classifier, boot_time). Same rules, same math. */
 (function (global) {
 'use strict';
 
@@ -288,9 +256,7 @@ var RULES = [
   ['driver', ['driver', 'probe', 'i2c', 'spi', 'usb', 'regulator', 'wlan', 'wifi', 'bluetooth', 'bt_', 'camera', 'sensor', 'audio', 'gpu', 'drm', 'mmc', 'sdhci', 'uart', 'touchscreen', 'charger'],
    'Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.'],
   ['kernel', ['kernel', 'panic', 'oops', 'bug:', 'call trace', 'lockup', 'mount root', 'initramfs', 'page allocation', 'oom'],
-   'Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.'],
-  ['system', ['init:', 'servicemanager', 'vold', 'netd', 'zygote', 'system_server', 'surfaceflinger', 'audioserver', 'healthd', 'lmkd', 'android runtime', 'watchdog'],
-   'Review the failing system service: check its init .rc entry, dependencies and restart policy.']
+   'Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.']
 ];
 var DEFAULT_RECOMMENDATION = 'Review the log context around this line for the root cause.';
 
@@ -421,69 +387,6 @@ function analyzeBootTime(entries, slowThreshold) {
 }
 
 /* ---- score.py ---- */
-var PENALTIES = {CRITICAL: 25, ERROR: 10, WARNING: 3};
-var SLOW_STAGE_PENALTY = 5, SLOW_STAGE_CAP = 15;
-
-function healthScore(issues, timing) {
-  var breakdown = [];
-  var score = 100;
-  ['CRITICAL', 'ERROR', 'WARNING'].forEach(function (sev) {
-    var count = issues.filter(function (i) { return i.severity === sev; }).length;
-    if (count) {
-      var lost = count * PENALTIES[sev];
-      score -= lost;
-      breakdown.push(count + ' x ' + sev + ' (-' + PENALTIES[sev] + ' each) = -' + lost);
-    }
-  });
-  var slow = timing.slow_stages.length;
-  if (slow) {
-    var lost2 = Math.min(slow * SLOW_STAGE_PENALTY, SLOW_STAGE_CAP);
-    score -= lost2;
-    breakdown.push(slow + ' x slow stage (-' + SLOW_STAGE_PENALTY + ' each, capped) = -' + lost2);
-  }
-  score = Math.max(0, score);
-  var grade = score >= 90 ? 'Excellent' : score >= 70 ? 'Good' : score >= 40 ? 'Needs attention' : 'Critical';
-  return {score: score, grade: grade, breakdown: breakdown};
-}
-
-/* ---- compare.py ---- */
-function fingerprint(issue) {
-  var norm = issue.message.toLowerCase().replace(/\d+/g, '#').trim();
-  return issue.category + '|' + norm;
-}
-
-function compareIssues(oldIssues, newIssues) {
-  var oldMap = {}, newMap = {};
-  oldIssues.forEach(function (i) { oldMap[fingerprint(i)] = i; });
-  newIssues.forEach(function (i) { newMap[fingerprint(i)] = i; });
-  var fixed = [], introduced = [], persisting = [];
-  Object.keys(oldMap).forEach(function (k) { if (!(k in newMap)) fixed.push(oldMap[k]); });
-  Object.keys(newMap).forEach(function (k) {
-    if (!(k in oldMap)) introduced.push(newMap[k]); else persisting.push(newMap[k]);
-  });
-  return {fixed: fixed, introduced: introduced, persisting: persisting,
-          summary: {fixed: fixed.length, introduced: introduced.length, persisting: persisting.length}};
-}
-
-function verdict(oldHealth, newHealth, oldDuration, newDuration) {
-  var lines = [];
-  var delta = newHealth.score - oldHealth.score;
-  if (delta > 0) lines.push('Health score improved by ' + delta + ' points (' + oldHealth.score + ' -> ' + newHealth.score + ').');
-  else if (delta < 0) lines.push('Health score dropped by ' + (-delta) + ' points (' + oldHealth.score + ' -> ' + newHealth.score + ').');
-  else lines.push('Health score unchanged at ' + newHealth.score + '.');
-  if (oldDuration !== null && newDuration !== null) {
-    var d = newDuration - oldDuration;
-    if (Math.abs(d) >= 0.5) {
-      var dir = d > 0 ? 'slower' : 'faster';
-      lines.push('Boot is ' + Math.abs(d).toFixed(1) + 's ' + dir + ' (' + oldDuration.toFixed(1) + 's -> ' + newDuration.toFixed(1) + 's).');
-    } else {
-      lines.push('Boot time roughly unchanged (' + oldDuration.toFixed(1) + 's -> ' + newDuration.toFixed(1) + 's).');
-    }
-  }
-  return lines;
-}
-
-/* Full pipeline: raw log text -> report object (mirrors the Python JSON report). */
 function analyzeLog(text, inputName) {
   var entries = parseText(text);
   var sources = {dmesg: 0, logcat: 0, unknown: 0};
@@ -491,7 +394,6 @@ function analyzeLog(text, inputName) {
   var issues = detect(entries);
   var timing = analyzeBootTime(entries);
   var summary = summarize(issues);
-  var health = healthScore(issues, timing);
   return {
     tool: 'android-boot-log-analyzer',
     input: inputName || 'pasted log',
@@ -501,10 +403,7 @@ function analyzeLog(text, inputName) {
       issues_detected: summary.issues_detected,
       total_boot_time_seconds: timing.duration,
       counts_by_severity: summary.counts_by_severity,
-      counts_by_category: summary.counts_by_category,
-      boot_health_score: health.score,
-      boot_health_grade: health.grade,
-      score_breakdown: health.breakdown
+      counts_by_category: summary.counts_by_category
     },
     boot_timing: timing,
     issues: issues,
@@ -512,24 +411,10 @@ function analyzeLog(text, inputName) {
   };
 }
 
-function compareLogs(oldText, newText, oldName, newName) {
-  var oldR = analyzeLog(oldText, oldName || 'before');
-  var newR = analyzeLog(newText, newName || 'after');
-  var cmp = compareIssues(oldR.issues, newR.issues);
-  var v = verdict(
-    {score: oldR.summary.boot_health_score},
-    {score: newR.summary.boot_health_score},
-    oldR.summary.total_boot_time_seconds,
-    newR.summary.total_boot_time_seconds
-  );
-  return {before: oldR, after: newR, fixed: cmp.fixed, introduced: cmp.introduced,
-          persisting: cmp.persisting, summary: cmp.summary, verdict: v};
-}
-
 /* ---- report.py: canonical report dict + standalone HTML download ----
    Faithful port of the Python report generator, so the files you download
    here are the files the CLI would write for the same log. */
-var CATEGORY_LABELS = {kernel: 'Kernel', driver: 'Driver', firmware: 'Firmware', selinux: 'SELinux', system: 'System', other: 'Other'};
+var CATEGORY_LABELS = {kernel: 'Kernel', driver: 'Driver', firmware: 'Firmware', selinux: 'SELinux', other: 'Other'};
 var PY_SEV_COLORS = {CRITICAL: '#ff4d5e', ERROR: '#ff8c42', WARNING: '#ffd447'};
 
 function escHtml(s) {
@@ -561,10 +446,7 @@ function canonicalReport(r) {
       issues_detected: r.summary.issues_detected,
       total_boot_time_seconds: r.summary.total_boot_time_seconds,
       counts_by_severity: r.summary.counts_by_severity,
-      counts_by_category: r.summary.counts_by_category,
-      boot_health_score: r.summary.boot_health_score,
-      boot_health_grade: r.summary.boot_health_grade,
-      score_breakdown: r.summary.score_breakdown
+      counts_by_category: r.summary.counts_by_category
     },
     boot_timing: {
       duration_seconds: r.boot_timing.duration,
@@ -582,42 +464,7 @@ function canonicalReport(r) {
   };
 }
 
-/* The exact JSON the Python CLI writes for `compare --json`. */
-function compareReportJson(r, oldName, newName) {
-  var mini = function (i) { return {severity: i.severity, category: i.category, message: i.message}; };
-  return {old: oldName, new: newName, verdict: r.verdict, summary: r.summary,
-          introduced: r.introduced.map(mini), fixed: r.fixed.map(mini)};
-}
-
-/* Port of report.py _timeline_svg. */
-function pyTimelineSvg(stages, issues, duration) {
-  if (!duration || duration <= 0 || !stages.length) {
-    return "<p class='muted'>No boot-stage markers found, so no timeline could be drawn for this log.</p>";
-  }
-  var width = 960, height = 120, barY = 46, barH = 26, span = duration;
-  var x = function (ts) { return 90 + (ts / span) * (width - 110); };
-  var parts = ["<svg viewBox='0 0 " + width + ' ' + height + "'" + " class='timeline' role='img' aria-label='Boot timeline'>"];
-  stages.forEach(function (stage) {
-    var sx = x(stage.start), ex = Math.max(x(stage.end), x(stage.start) + 2);
-    var color = stage.slow ? '#ff4d5e' : '#a3e635';
-    parts.push("<rect x='" + sx.toFixed(1) + "' y='" + barY + "' width='" + (ex - sx).toFixed(1) + "' height='" + barH + "' rx='4' fill='" + color + "' opacity='0.85'><title>" + stage.name + ': ' + stage.duration.toFixed(2) + 's</title></rect>');
-    var label = stage.name.replace(/_/g, ' ');
-    if (ex - sx > 60) {
-      parts.push("<text x='" + (sx + 5).toFixed(1) + "' y='" + (barY + 17) + "' class='stage-label'>" + escHtml(label) + ' ' + stage.duration.toFixed(1) + 's</text>');
-    }
-  });
-  issues.forEach(function (issue) {
-    if (issue.timestamp === null || issue.timestamp === undefined) return;
-    var cx = x(issue.timestamp);
-    var color = PY_SEV_COLORS[issue.severity] || '#ffd447';
-    parts.push("<circle cx='" + cx.toFixed(1) + "' cy='" + (barY + barH + 18) + "' r='5' fill='" + color + "' stroke='#0b0f14' stroke-width='1.5'><title>[" + issue.severity + '] ' + escHtml(issue.category) + ': ' + escHtml(issue.message.slice(0, 160)) + '</title></circle>');
-  });
-  parts.push("<text x='90' y='" + (barY - 10) + "' class='axis'>0s</text><text x='" + (width - 40) + "' y='" + (barY - 10) + "' class='axis'>" + span.toFixed(1) + 's</text>');
-  parts.push('</svg>');
-  return parts.join('');
-}
-
-var REPORT_CSS = "\n:root { --bg:#0b0f14; --card:#131a22; --line:#223040; --text:#e6edf3;\n  --muted:#8b98a5; --lime:#a3e635; }\n* { box-sizing:border-box; }\nbody { margin:0; background:var(--bg); color:var(--text);\n  font:15px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif; }\n.wrap { max-width:1020px; margin:0 auto; padding:32px 20px 64px; }\nh1 { font-size:26px; margin:0 0 4px; }\nh2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }\n.sub { color:var(--muted); margin-bottom:24px; }\n.cards { display:flex; flex-wrap:wrap; gap:14px; }\n.card { background:var(--card); border:1px solid var(--line);\n  border-radius:12px; padding:16px 20px; min-width:150px; flex:1; }\n.card .num { font-size:30px; font-weight:700; }\n.card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;\n  letter-spacing:.06em; }\n.timeline { width:100%; background:var(--card); border:1px solid var(--line);\n  border-radius:12px; }\n.stage-label { font-size:10.5px; fill:#0b0f14; font-weight:600; }\n.axis { font-size:11px; fill:var(--muted); }\ntable { width:100%; border-collapse:collapse; background:var(--card);\n  border-radius:12px; overflow:hidden; }\nth, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }\nth { color:var(--muted); font-size:12px; text-transform:uppercase;\n  letter-spacing:.05em; }\ntr.slow td { color:#ff8c42; }\n.issue { background:var(--card); border:1px solid var(--line);\n  border-left:4px solid; border-radius:10px; padding:12px 16px;\n  margin:10px 0; }\n.badge { color:#0b0f14; font-weight:700; font-size:11px; border-radius:6px;\n  padding:2px 8px; }\n.cat { font-weight:600; margin-left:8px; }\n.ts { color:var(--muted); font-size:12.5px; margin-left:10px; }\n.msg { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;\n  margin:8px 0 6px; word-break:break-word; }\n.rec { color:var(--muted); font-size:13px; }\n.muted { color:var(--muted); }\nfooter { margin-top:40px; color:var(--muted); font-size:12.5px; }\n";
+var REPORT_CSS = "\n:root { --bg:#0b0f14; --card:#131a22; --line:#223040; --text:#e6edf3;\n  --muted:#8b98a5; --lime:#a3e635; }\n* { box-sizing:border-box; }\nbody { margin:0; background:var(--bg); color:var(--text);\n  font:15px/1.55 -apple-system,'Segoe UI',Roboto,sans-serif; }\n.wrap { max-width:1020px; margin:0 auto; padding:32px 20px 64px; }\nh1 { font-size:26px; margin:0 0 4px; }\nh2 { font-size:18px; margin:34px 0 12px; color:var(--lime); }\n.sub { color:var(--muted); margin-bottom:24px; }\n.cards { display:flex; flex-wrap:wrap; gap:14px; }\n.card { background:var(--card); border:1px solid var(--line);\n  border-radius:12px; padding:16px 20px; min-width:150px; flex:1; }\n.card .num { font-size:30px; font-weight:700; }\n.card .lbl { color:var(--muted); font-size:12.5px; text-transform:uppercase;\n  letter-spacing:.06em; }\ntable { width:100%; border-collapse:collapse; background:var(--card);\n  border-radius:12px; overflow:hidden; }\nth, td { text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }\nth { color:var(--muted); font-size:12px; text-transform:uppercase;\n  letter-spacing:.05em; }\ntr.slow td { color:#ff8c42; }\n.issue { background:var(--card); border:1px solid var(--line);\n  border-left:4px solid; border-radius:10px; padding:12px 16px;\n  margin:10px 0; }\n.badge { color:#0b0f14; font-weight:700; font-size:11px; border-radius:6px;\n  padding:2px 8px; }\n.cat { font-weight:600; margin-left:8px; }\n.ts { color:var(--muted); font-size:12.5px; margin-left:10px; }\n.msg { font-family:ui-monospace,Menlo,Consolas,monospace; font-size:13px;\n  margin:8px 0 6px; word-break:break-word; }\n.rec { color:var(--muted); font-size:13px; }\n.muted { color:var(--muted); }\nfooter { margin-top:40px; color:var(--muted); font-size:12.5px; }\n";
 
 /* Port of report.py render_html: the self-contained report page the CLI writes. */
 function renderStandaloneHtml(report) {
@@ -625,10 +472,6 @@ function renderStandaloneHtml(report) {
   var summary = report.summary;
   var sev = summary.counts_by_severity;
   var cat = summary.counts_by_category;
-  var score = summary.boot_health_score;
-  var grade = summary.boot_health_grade;
-  var scoreColor = score >= 90 ? '#a3e635' : score >= 70 ? '#ffd447' : score >= 40 ? '#ff8c42' : '#ff4d5e';
-
   var catKeys = Object.keys(cat).sort(function (a, b) { return cat[b] - cat[a]; });
   var catRows = catKeys.map(function (k) {
     return '<tr><td>' + e(CATEGORY_LABELS[k] || (k.charAt(0).toUpperCase() + k.slice(1))) + '</td><td>' + cat[k] + '</td></tr>';
@@ -656,10 +499,8 @@ function renderStandaloneHtml(report) {
       + '<td>' + (s.slow ? 'SLOW' : '') + '</td></tr>';
   }).join('');
 
-  var breakdown = summary.score_breakdown.length ? summary.score_breakdown.join('; ') : 'no penalties';
   var recs = report.recommendations.map(function (r) { return '<li>' + e(r) + '</li>'; }).join('')
     || '<li>Nothing to fix based on this log.</li>';
-  var timeline = pyTimelineSvg(report.boot_timing.stages, report.issues, report.boot_timing.duration_seconds);
   var tbt = summary.total_boot_time_seconds;
   var stagesTable = stageRows
     ? '<h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr>' + stageRows + '</table>'
@@ -680,13 +521,7 @@ function renderStandaloneHtml(report) {
     + '    <div class="lbl">Total boot time</div></div>\n'
     + '  <div class="card"><div class="num">' + (sev.CRITICAL || 0) + ' / ' + (sev.ERROR || 0) + ' / ' + (sev.WARNING || 0) + '</div>\n'
     + '    <div class="lbl">Critical / Error / Warning</div></div>\n'
-    + '  <div class="card"><div class="num" style="color:' + scoreColor + '">' + score + '</div>\n'
-    + '    <div class="lbl">Boot Health Score (' + e(grade) + ')</div></div>\n'
     + '</div>\n'
-    + '<p class="muted" style="margin-top:10px">Score math: start at 100; ' + e(breakdown) + '.</p>\n\n'
-    + '<h2>Boot timeline</h2>\n'
-    + timeline + '\n'
-    + '<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>\n\n'
     + stagesTable + '\n\n'
     + '<h2>Issues by category</h2>\n'
     + '<table><tr><th>Category</th><th>Count</th></tr>' + catRows + '</table>\n\n'
@@ -698,113 +533,19 @@ function renderStandaloneHtml(report) {
     + '</div></body></html>';
 }
 
-/* Self-contained HTML comparison download. The CLI writes compare data as
-   JSON only; this page is a web extra in the same visual style as report.py. */
-function renderCompareHtml(r, oldName, newName, oldSynthetic, newSynthetic, assessment) {
-  var e = escHtml;
-  var badge = function (s) { return s ? ' (synthetic sample)' : ''; };
-  var scoreColor = function (s) { return s >= 90 ? '#a3e635' : s >= 70 ? '#ffd447' : s >= 40 ? '#ff8c42' : '#ff4d5e'; };
-  var b = r.before.summary, a = r.after.summary;
-  var compareSections = function (colFn, rr, oOk, nOk) {
-    if (oOk && nOk) {
-      return colFn('Fixed since the before log', rr.fixed) + '\n\n'
-        + colFn('New in the after log', rr.introduced) + '\n\n'
-        + colFn('Still present in both', rr.persisting);
-    }
-    var out = '';
-    if (oOk) out += colFn('Issues detected in the before log (comparison unavailable)', rr.before.issues);
-    if (nOk) out += (out ? '\n\n' : '') + colFn('Issues detected in the after log (comparison unavailable)', rr.after.issues);
-    if (!out) out = "<p class='muted'>No issues could be detected - neither input could be read as a boot log.</p>";
-    return out;
-  };
-  var cmpCountCard = function (label, val, color, scored) {
-    return scored
-      ? '  <div class="card"><div class="num" style="color:' + color + '">' + val + '</div>\n'
-        + '    <div class="lbl">' + label + '</div></div>\n'
-      : '  <div class="card"><div class="num" style="color:#8b98a5">n/a</div>\n'
-        + '    <div class="lbl">' + label + ' - unavailable</div></div>\n';
-  };
-  var issueCard = function (i) {
-    var color = PY_SEV_COLORS[i.severity] || '#ffd447';
-    return "<div class='issue' style='border-left-color:" + color + "'>"
-      + "<div class='issue-head'><span class='badge' style='background:" + color + "'>" + i.severity + '</span> '
-      + "<span class='cat'>" + e(CATEGORY_LABELS[i.category] || i.category) + '</span></div>'
-      + "<div class='msg'>" + e(i.message) + '</div></div>';
-  };
-  var col = function (title, arr) {
-    return '<h2>' + title + ' (' + arr.length + ')</h2>\n'
-      + (arr.map(issueCard).join('') || "<p class='muted'>None.</p>");
-  };
-  var oldOk = !assessment || assessment.oldOk, newOk = !assessment || assessment.newOk;
-  var verdictSrc = (oldOk && newOk) ? r.verdict : assessment.verdictLines;
-  var verdictLis = verdictSrc.map(function (v) { return '<li>' + e(v) + '</li>'; }).join('');
-  var fmt = function (t) { return t !== null ? pyFloat(t) + 's' : 'n/a'; };
-  return '<!DOCTYPE html>\n'
-    + '<html lang="en"><head><meta charset="utf-8">\n'
-    + '<meta name="viewport" content="width=device-width, initial-scale=1">\n'
-    + '<title>Boot Comparison Report - ' + e(oldName) + ' vs ' + e(newName) + '</title>\n'
-    + '<style>' + REPORT_CSS + '</style></head>\n'
-    + '<body><div class="wrap">\n'
-    + '<h1>Boot Comparison Report</h1>\n'
-    + '<div class="sub">Before: <code>' + e(oldName) + '</code>' + badge(oldSynthetic)
-    + ' &nbsp;vs&nbsp; After: <code>' + e(newName) + '</code>' + badge(newSynthetic) + '</div>\n\n'
-    + '<div class="cards">\n'
-    + (oldOk
-      ? '  <div class="card"><div class="num" style="color:' + scoreColor(b.boot_health_score) + '">' + b.boot_health_score + '</div>\n'
-        + '    <div class="lbl">Before score (' + e(b.boot_health_grade) + '), ' + fmt(b.total_boot_time_seconds) + '</div></div>\n'
-      : '  <div class="card"><div class="num" style="color:#8b98a5">n/a</div>\n'
-        + '    <div class="lbl">Before - not scored (unsupported input)</div></div>\n')
-    + (newOk
-      ? '  <div class="card"><div class="num" style="color:' + scoreColor(a.boot_health_score) + '">' + a.boot_health_score + '</div>\n'
-        + '    <div class="lbl">After score (' + e(a.boot_health_grade) + '), ' + fmt(a.total_boot_time_seconds) + '</div></div>\n'
-      : '  <div class="card"><div class="num" style="color:#8b98a5">n/a</div>\n'
-        + '    <div class="lbl">After - not scored (unsupported input)</div></div>\n')
-    + cmpCountCard('Issues fixed', r.summary.fixed, '#a3e635', oldOk && newOk)
-    + cmpCountCard('New issues', r.summary.introduced, '#ff4d5e', oldOk && newOk)
-    + cmpCountCard('Still present', r.summary.persisting, '#ffd447', oldOk && newOk)
-    + '</div>\n\n'
-    + '<h2>Verdict</h2>\n'
-    + '<ul>' + verdictLis + '</ul>\n\n'
-    + compareSections(col, r, oldOk, newOk) + '\n\n'
-    + '<footer>Generated by <strong>android-boot-log-analyzer</strong> (web comparison view) \u00b7 same data as the CLI\'s compare --json \u00b7 built by Kanishk Saini as a learning project</footer>\n'
-    + '</div></body></html>';
-}
-
-/* ---- input quality assessment (web layer) ----
-   The engine scores whatever it is given; this layer decides whether the
-   input was readable boot-log evidence at all. An input with zero recognized
-   dmesg/logcat lines gets NO health score and NO timing conclusion anywhere
-   (page, compare, downloads) - "0 issues / 100" would be a false claim. */
 function assessReport(report) {
   var s = report.sources || {};
   var recognized = (s.dmesg || 0) + (s.logcat || 0);
   return {recognized: recognized, total: report.entries_count, ok: recognized > 0};
 }
 
-function compareAssessment(r) {
-  var oa = assessReport(r.before), na = assessReport(r.after);
-  var lines = [];
-  if (oa.ok && na.ok) {
-    lines = r.verdict;
-  } else {
-    if (!oa.ok) lines.push('Before log: unsupported input (' + oa.total + ' lines, none recognized as dmesg/logcat) - no score or boot time given for this side.');
-    if (!na.ok) lines.push('After log: unsupported input (' + na.total + ' lines, none recognized as dmesg/logcat) - no score or boot time given for this side.');
-    if (oa.ok || na.ok) lines.push('Score and boot-time movement cannot be judged while one side is unsupported; the issue lists still reflect the recognized side.');
-    else lines.push('Neither side could be read as a boot log, so no issues could be detected either.');
-  }
-  return {oldOk: oa.ok, newOk: na.ok, oldRec: oa.recognized, newRec: na.recognized,
-          oldTotal: oa.total, newTotal: na.total, verdictLines: lines};
-}
-
-/* JSON report download for an unsupported input: score withheld, assessment stated. */
+/* JSON report download for an unsupported input: assessment stated. */
 function unsupportedReportJson(r) {
   var c = canonicalReport(r);
-  c.summary.boot_health_score = null;
-  c.summary.boot_health_grade = 'Not scored - unsupported input';
   c.input_assessment = {
     parsed_lines: r.entries_count,
     recognized_log_lines: 0,
-    verdict: 'Unsupported input: no line looks like dmesg or logcat output, so no health score or boot-time conclusion is given. A score would be meaningless here.'
+    verdict: 'Unsupported input: no line looks like dmesg or logcat output, so no analysis is given. Detecting "0 issues" here would be meaningless.'
   };
   return c;
 }
@@ -823,8 +564,8 @@ function unsupportedReportHtml(r) {
     + "<div class='issue-head'><span class='badge' style='background:#ffd447'>UNSUPPORTED INPUT</span> "
     + "<span class='cat'>No verdict given</span></div>"
     + "<div class='msg'>" + r.entries_count + ' lines were read, but none of them look like dmesg or logcat output. '
-    + 'There is no evidence for a health score or boot-time conclusion, so none is given - '
-    + "a &quot;0 issues, 100/100&quot; result would be a false claim. "
+    + 'There is no readable boot-log content, so no analysis is given - '
+    + "a &quot;0 issues&quot; result would be a false claim. "
     + 'Expected input: Android dmesg output, or logcat in threadtime or brief format.</div>'
     + '</div>\n\n'
     + '<footer>Generated by <strong>android-boot-log-analyzer</strong> \u00b7 input assessment added by the web tool \u00b7 built by Kanishk Saini as a learning project</footer>\n'
@@ -833,12 +574,11 @@ function unsupportedReportHtml(r) {
 
 var API = {
   parseText: parseText, detect: detect, classify: classify, summarize: summarize,
-  analyzeBootTime: analyzeBootTime, healthScore: healthScore,
-  analyzeLog: analyzeLog, compareLogs: compareLogs,
+  analyzeBootTime: analyzeBootTime,
+  analyzeLog: analyzeLog,
   buildRecommendations: buildRecommendations, canonicalReport: canonicalReport,
-  renderStandaloneHtml: renderStandaloneHtml, compareReportJson: compareReportJson,
-  renderCompareHtml: renderCompareHtml, assessReport: assessReport,
-  compareAssessment: compareAssessment, unsupportedReportJson: unsupportedReportJson,
+  renderStandaloneHtml: renderStandaloneHtml, assessReport: assessReport,
+  unsupportedReportJson: unsupportedReportJson,
   unsupportedReportHtml: unsupportedReportHtml
 };
 if (typeof module !== 'undefined' && module.exports) module.exports = API;
@@ -851,27 +591,16 @@ var SAMPLES = {"boot_failure": "[    0.000000] boot: Linux version 6.1.25-androi
 
 var SAMPLE_META = {
   boot_failure: {name: 'boot_failure.log', desc: 'dmesg - firmware load failure, driver probe errors, SELinux denial, CPU soft lockup', synth: true},
-  boot_fixed:   {name: 'boot_fixed.log',   desc: 'dmesg - the same boot after the fixes (pair with compare mode)', synth: true},
+  boot_fixed:   {name: 'boot_fixed.log',   desc: 'dmesg - the same boot after the fixes (same boot after fixes)', synth: true},
   boot_slow:    {name: 'boot_slow.log',    desc: 'logcat - 42s boot with a 14.5s package scan', synth: true},
   boot_healthy: {name: 'boot_healthy.log', desc: 'logcat - clean 9s boot, no issues', synth: true}
 };
 var selectedSample = null;
 var fileText = null;
-var cmpState = {old: {sample: null, file: null}, new: {sample: null, file: null}};
 var lastAnalyze = null;  /* {report, canonical} for the visible analyze result */
-var lastCompare = null;  /* {result, oldName, newName} for the visible compare result */
 
 function esc(s){var d=document.createElement('div');d.textContent=s;return d.innerHTML;}
-function gradeClass(g){return g==='Excellent'?'score-excellent':g==='Good'?'score-good':g==='Needs attention'?'score-attention':'score-critical';}
 function stageLabel(n){return n.replace(/_/g,' ');}
-
-function setMode(m){
-  document.getElementById('tab-analyze').classList.toggle('active', m==='analyze');
-  document.getElementById('tab-compare').classList.toggle('active', m==='compare');
-  document.getElementById('mode-analyze').classList.toggle('hidden', m!=='analyze');
-  document.getElementById('mode-compare').classList.toggle('hidden', m!=='compare');
-  document.getElementById('results').classList.add('hidden');
-}
 
 function buildSamples(){
   var row = document.getElementById('sample-row');
@@ -884,19 +613,6 @@ function buildSamples(){
     b.onclick = function(){ selectSample(key); };
     row.appendChild(b);
   });
-  ['old','new'].forEach(function(side){
-    var sel = document.getElementById('cmp-' + side + '-sample');
-    sel.innerHTML = '';
-    sel.add(new Option('Choose a synthetic sample...', ''));
-    Object.keys(SAMPLE_META).forEach(function(key){
-      sel.add(new Option(SAMPLE_META[key].name + ' (synthetic)', key));
-    });
-    sel.addEventListener('change', function(){ cmpPickSample(side, sel.value); });
-    document.getElementById('cmp-' + side + '-file').addEventListener('change', function(ev){ cmpPickFile(side, ev); });
-    document.getElementById('cmp-' + side + '-input').addEventListener('input', function(){ cmpTyped(side); });
-  });
-  cmpPickSample('old', 'boot_failure');
-  cmpPickSample('new', 'boot_fixed');
 }
 
 function selectSample(key){
@@ -935,78 +651,6 @@ function currentInput(){
   return null;
 }
 
-/* ---- compare inputs: each side takes a sample, a paste, or a file ---- */
-function cmpPickSample(side, key){
-  cmpState[side].sample = key || null; cmpState[side].file = null;
-  document.getElementById('cmp-' + side + '-sample').value = key || '';
-  document.getElementById('cmp-' + side + '-file').value = '';
-  document.getElementById('cmp-' + side + '-label').textContent = '';
-  document.getElementById('cmp-' + side + '-input').value = key ? SAMPLES[key] : '';
-}
-function cmpPickFile(side, ev){
-  var f = ev.target.files[0];
-  if (!f) return;
-  var r = new FileReader();
-  r.onload = function(){
-    cmpState[side].sample = null; cmpState[side].file = f.name;
-    document.getElementById('cmp-' + side + '-sample').value = '';
-    document.getElementById('cmp-' + side + '-input').value = String(r.result);
-    document.getElementById('cmp-' + side + '-label').textContent = f.name + ' loaded';
-  };
-  r.readAsText(f);
-}
-function cmpTyped(side){
-  cmpState[side].sample = null; cmpState[side].file = null;
-  document.getElementById('cmp-' + side + '-sample').value = '';
-  document.getElementById('cmp-' + side + '-label').textContent = '';
-}
-function cmpInput(side){
-  var v = document.getElementById('cmp-' + side + '-input').value;
-  if (!v.trim()) return null;
-  var st = cmpState[side];
-  var name = st.sample ? SAMPLE_META[st.sample].name
-    : (st.file || 'pasted log (' + (side === 'old' ? 'before' : 'after') + ')');
-  return {text: v, name: name, synthetic: !!st.sample};
-}
-
-function renderTimeline(report){
-  var t = report.boot_timing;
-  if (!t.timestamps_found || !t.stages.length || !t.duration) return '';
-  var W = 960, barH = 26, padT = 30, padB = 44, rowGap = 10;
-  var H = padT + t.stages.length * (barH + rowGap) + 40 + padB;
-  var sx = function(ts){ return ts / t.duration * W; };
-  var svg = '<svg viewBox="0 0 ' + W + ' ' + H + '" width="100%" style="min-width:620px" role="img" aria-label="Boot timeline">';
-  for (var g = 0; g <= 4; g++){
-    var ts = t.duration * g / 4, x = sx(ts);
-    svg += '<line x1="' + x + '" y1="' + (padT - 8) + '" x2="' + x + '" y2="' + (H - padB + 6) + '" stroke="#22301c" stroke-width="1"/>';
-    svg += '<text x="' + x + '" y="' + (H - padB + 22) + '" fill="#94a392" font-size="11" text-anchor="middle" font-family="ui-monospace,monospace">' + ts.toFixed(1) + 's</text>';
-  }
-  t.stages.forEach(function(st, i){
-    var y = padT + i * (barH + rowGap);
-    var x = sx(st.start), w = Math.max(2, sx(st.end) - x);
-    var color = st.slow ? '#f87171' : '#65a30d';
-    svg += '<rect x="' + x + '" y="' + y + '" width="' + w + '" height="' + barH + '" rx="4" fill="' + color + '" opacity="0.9"/>';
-    var lbl = stageLabel(st.name) + ' - ' + st.duration.toFixed(1) + 's' + (st.slow ? ' SLOW' : '');
-    var est = lbl.length * 6.6 + 12;
-    if (w >= est) {
-      svg += '<text x="' + (x + 6) + '" y="' + (y + barH / 2 + 4) + '" fill="#0a0e0a" font-size="11" font-weight="700" font-family="ui-monospace,monospace">' + esc(lbl) + '</text>';
-    } else {
-      var lx = Math.min(x + w + 6, W - est + 6);
-      svg += '<text x="' + lx + '" y="' + (y + barH / 2 + 4) + '" fill="#e7ece3" font-size="11" font-family="ui-monospace,monospace">' + esc(lbl) + '</text>';
-    }
-  });
-  var dotY = padT + t.stages.length * (barH + rowGap) + 14;
-  svg += '<line x1="0" y1="' + dotY + '" x2="' + W + '" y2="' + dotY + '" stroke="#22301c" stroke-width="1"/>';
-  report.issues.forEach(function(is){
-    if (is.timestamp === null) return;
-    var c = is.severity === 'CRITICAL' ? '#f87171' : is.severity === 'ERROR' ? '#fb923c' : '#fbbf24';
-    svg += '<circle cx="' + sx(is.timestamp) + '" cy="' + dotY + '" r="5" fill="' + c + '"><title>' + esc(is.severity + ' @ ' + is.timestamp.toFixed(1) + 's: ' + is.message) + '</title></circle>';
-  });
-  svg += '<text x="0" y="' + (dotY + 18) + '" fill="#94a392" font-size="10" font-family="ui-monospace,monospace">dots = issues at the moment they fired (red critical, orange error, yellow warning)</text>';
-  svg += '</svg>';
-  return '<div class="tl-wrap"><div class="tl-title">Boot timeline</div>' + svg + '</div>';
-}
-
 var MAX_INPUT_CHARS = 1000000, MAX_INPUT_LINES = 20000, MAX_RENDER_ISSUES = 500;
 function checkSize(text){
   if (text.length > MAX_INPUT_CHARS) return 'this log is over the web tool\'s 1 MB limit. For very large captures use the Python CLI (python3 -m bootlog_analyzer your.log) - it has no size limit.';
@@ -1039,40 +683,6 @@ function downloadAnalyze(kind){
       base + '_report.html', 'text/html');
   }
 }
-function downloadCompareJson(){
-  if (!lastCompare) return;
-  var c = BootLogAnalyzer.compareReportJson(lastCompare.result, lastCompare.oldName, lastCompare.newName);
-  var a = lastCompare.assessment;
-  if (a && (!a.oldOk || !a.newOk)){
-    c.verdict = a.verdictLines;
-    c.summary = {fixed: null, introduced: null, persisting: null};
-    c.fixed = null;
-    c.introduced = null;
-    if (a.oldOk || a.newOk){
-      var sideName = a.oldOk ? 'old' : 'new';
-      var repSide = a.oldOk ? lastCompare.result.before : lastCompare.result.after;
-      c.recognized_side_issues = {
-        side: sideName,
-        input: a.oldOk ? lastCompare.oldName : lastCompare.newName,
-        issues: repSide.issues.map(function(i){ return {severity: i.severity, category: i.category, message: i.message}; })
-      };
-    }
-    c.input_assessment = {
-      old: {input: lastCompare.oldName, recognized_log_lines: a.oldRec, parsed_lines: a.oldTotal, scored: a.oldOk},
-      new: {input: lastCompare.newName, recognized_log_lines: a.newRec, parsed_lines: a.newTotal, scored: a.newOk},
-      note: 'A side with no recognized dmesg/logcat lines is not scored; health and boot-time conclusions are withheld for it.'
-    };
-  }
-  downloadBlob(JSON.stringify(c, null, 2) + '\n',
-    reportBase(lastCompare.oldName) + '_vs_' + reportBase(lastCompare.newName) + '_compare.json', 'application/json');
-}
-function downloadCompareHtml(){
-  if (!lastCompare) return;
-  var c = lastCompare;
-  downloadBlob(BootLogAnalyzer.renderCompareHtml(c.result, c.oldName, c.newName, c.oldSynthetic, c.newSynthetic, c.assessment),
-    reportBase(c.oldName) + '_vs_' + reportBase(c.newName) + '_compare.html', 'text/html');
-}
-
 function renderReport(report){
   var s = report.summary, t = report.boot_timing;
   var src = report.sources || {dmesg: 0, logcat: 0, unknown: report.entries_count};
@@ -1085,10 +695,10 @@ function renderReport(report){
       + '<button class="btn dl" onclick="downloadAnalyze(\'json\')">Download JSON report</button>'
       + '<button class="btn dl" onclick="downloadAnalyze(\'html\')">Download HTML report</button>'
       + '</div>';
-    h += '<p class="dl-note">The downloads state the same thing this page does: unsupported input, score withheld.</p>';
-    h += '<div class="unsupported"><b>Unsupported input - no health score given.</b><br>'
-      + 'None of the ' + report.entries_count + ' lines look like dmesg or logcat output, so there is no evidence for a health score or boot-time conclusion. '
-      + 'A "0 issues, 100/100" result here would be meaningless - the analyzer only scores logs it can actually read. '
+    h += '<p class="dl-note">The downloads state the same thing this page does: unsupported input.</p>';
+    h += '<div class="unsupported"><b>Unsupported input.</b><br>'
+      + 'None of the ' + report.entries_count + ' lines look like dmesg or logcat output, so there is nothing to analyze. '
+      + 'A "0 issues" result here would be meaningless - the analyzer only reports on logs it can actually read. '
       + 'Paste Android dmesg output, or logcat in threadtime or brief format.</div>';
     return h;
   }
@@ -1104,9 +714,7 @@ function renderReport(report){
   h += '<div class="card"><div class="lbl">Boot time</div><div class="val">' + (t.duration !== null ? t.duration.toFixed(1) + 's' : 'n/a') + '</div></div>';
   h += '<div class="card"><div class="lbl">Issues found</div><div class="val">' + s.issues_detected + '</div></div>';
   h += '<div class="card"><div class="lbl">Slow stages</div><div class="val">' + t.slow_stages.length + '</div></div>';
-  h += '<div class="card"><div class="lbl">Boot health score</div><div class="val ' + gradeClass(s.boot_health_grade) + '">' + s.boot_health_score + '<span style="font-size:.9rem;color:var(--muted)">/100</span></div><div class="lbl">' + esc(s.boot_health_grade) + '</div></div>';
   h += '</div>';
-  h += '<div class="breakdown"><b>Score math:</b> start at 100' + (s.score_breakdown.length ? ', then ' + s.score_breakdown.map(esc).join(', ') : ', no deductions') + ', final score = <b>' + s.boot_health_score + '</b></div>';
   h += '<div class="chips">';
   if (s.counts_by_severity.CRITICAL) h += '<span class="chip crit">' + s.counts_by_severity.CRITICAL + ' critical</span>';
   if (s.counts_by_severity.ERROR) h += '<span class="chip err">' + s.counts_by_severity.ERROR + ' error</span>';
@@ -1114,7 +722,6 @@ function renderReport(report){
   Object.keys(s.counts_by_category).forEach(function(c){ h += '<span class="chip cat">' + esc(c) + ': ' + s.counts_by_category[c] + '</span>'; });
   if (!s.issues_detected) h += '<span class="chip" style="border-color:var(--green);color:var(--green)">no issues detected</span>';
   h += '</div>';
-  h += renderTimeline(report);
   if (t.note) h += '<p class="hint">' + esc(t.note) + '</p>';
   if (t.stages.length){
     h += '<table><thead><tr><th>Boot stage</th><th>Start</th><th>Duration</th><th>% of boot</th><th></th></tr></thead><tbody>';
@@ -1156,67 +763,6 @@ function runAnalyze(){
   lastAnalyze = {report: report, canonical: BootLogAnalyzer.canonicalReport(report)};
   var body = document.getElementById('results-body');
   body.innerHTML = renderReport(report);
-  showResults();
-}
-
-function issueMini(is){
-  return '<div class="cmp-item"><span class="pill ' + is.severity + '" style="margin-right:6px">' + is.severity + '</span>' + esc(is.message) + '</div>';
-}
-
-function runCompare(){
-  var o = cmpInput('old'), n = cmpInput('new');
-  if (!o || !n){ alert('Give both sides a log: pick a sample, paste text, or load a file for before and after.'); return; }
-  var tooBigO = checkSize(o.text);
-  if (tooBigO){ alert('Before log: ' + tooBigO); return; }
-  var tooBigN = checkSize(n.text);
-  if (tooBigN){ alert('After log: ' + tooBigN); return; }
-  var sameLog = (o.text === n.text);
-  var r = BootLogAnalyzer.compareLogs(o.text, n.text, o.name, n.name);
-  var asm = BootLogAnalyzer.compareAssessment(r);
-  lastCompare = {result: r, oldName: o.name, newName: n.name, oldSynthetic: o.synthetic, newSynthetic: n.synthetic, assessment: asm};
-  var badge = function(x){ return x.synthetic ? ' <span class="badge-synth" style="vertical-align:middle">SYNTHETIC SAMPLE</span>' : ''; };
-  var h = '';
-  h += '<h2><span class="num">2</span>Compare report</h2>';
-  h += '<p class="hint">' + esc(o.name) + ' (before)' + badge(o) + ' vs ' + esc(n.name) + ' (after)' + badge(n) + '</p>';
-  if (sameLog) h += '<p class="hint">Both sides are the same log - a no-change comparison. Expect "unchanged" verdicts and every issue under "Still present".</p>';
-  h += '<div class="dl-row"><button class="btn dl" onclick="downloadCompareJson()">Download JSON comparison</button>'
-    + '<button class="btn dl" onclick="downloadCompareHtml()">Download HTML comparison</button></div>';
-  h += '<p class="dl-note">The JSON is what the Python CLI writes with <code>compare --json</code> for these two logs; the HTML view is a web extra with the same data.</p>';
-  h += '<div class="cards">';
-  var cardFor = function(rep2, ok){
-    if (ok) return '<div class="val small ' + gradeClass(rep2.summary.boot_health_grade) + '">' + rep2.summary.boot_health_score + '/100 - ' + (rep2.summary.total_boot_time_seconds !== null ? rep2.summary.total_boot_time_seconds.toFixed(1) + 's' : 'n/a') + '</div>';
-    return '<div class="val small" style="color:var(--muted)">not scored<div style="font-size:.72rem;color:var(--amber)">unsupported input</div></div>';
-  };
-  h += '<div class="card"><div class="lbl">Before</div>' + cardFor(r.before, asm.oldOk) + '</div>';
-  h += '<div class="card"><div class="lbl">After</div>' + cardFor(r.after, asm.newOk) + '</div>';
-  var cmpOk = asm.oldOk && asm.newOk;
-  var countCard = function(label, val, color){
-    return cmpOk
-      ? '<div class="card"><div class="lbl">' + label + '</div><div class="val" style="color:' + color + '">' + val + '</div></div>'
-      : '<div class="card"><div class="lbl">' + label + '</div><div class="val" style="color:var(--muted)">n/a</div><div class="lbl">unavailable</div></div>';
-  };
-  h += countCard('Fixed', r.summary.fixed, 'var(--green)');
-  h += countCard('New', r.summary.introduced, 'var(--red)');
-  h += countCard('Persisting', r.summary.persisting, 'var(--amber)');
-  h += '</div>';
-  if (!asm.oldOk || !asm.newOk) h += '<div class="unsupported" style="margin-top:14px"><b>Score withheld.</b> One or both logs could not be read as dmesg/logcat, so health scores and boot-time conclusions are not given for that side.</div>';
-  h += '<div class="verdict">' + asm.verdictLines.map(function(v){ return '<div>' + esc(v) + '</div>'; }).join('') + '</div>';
-  if (cmpOk){
-    h += '<div class="cmp-cols">';
-    h += '<div class="cmp-col fixed"><h3>Fixed (' + r.summary.fixed + ')</h3>' + (r.fixed.length ? r.fixed.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
-    h += '<div class="cmp-col introduced"><h3>New issues (' + r.summary.introduced + ')</h3>' + (r.introduced.length ? r.introduced.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
-    h += '<div class="cmp-col persisting"><h3>Still present (' + r.summary.persisting + ')</h3>' + (r.persisting.length ? r.persisting.map(issueMini).join('') : '<p class="empty">none</p>') + '</div>';
-    h += '</div>';
-  } else {
-    var sideList = function(title, rep3){
-      return '<h3 style="font-size:.9rem;margin:14px 0 8px">' + title + ' (' + rep3.issues.length + ')</h3>'
-        + (rep3.issues.length ? rep3.issues.slice(0, MAX_RENDER_ISSUES).map(issueMini).join('') : '<p class="empty">No issues detected in the recognized lines.</p>');
-    };
-    if (asm.oldOk) h += sideList('Issues detected in the before log - comparison unavailable', r.before);
-    if (asm.newOk) h += sideList('Issues detected in the after log - comparison unavailable', r.after);
-    if (!asm.oldOk && !asm.newOk) h += '<p class="empty">No issues could be detected - neither input could be read as a boot log.</p>';
-  }
-  document.getElementById('results-body').innerHTML = h;
   showResults();
 }
 
