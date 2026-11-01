@@ -1,8 +1,7 @@
 """Report generator: JSON for machines, a self-contained HTML page for humans.
 
 The HTML report needs no build step and no network: one file, inline CSS,
-and an SVG boot timeline drawn from the measured stage data so you can see
-where the boot spent its time and where issues fired.
+no JavaScript - open it in any browser.
 """
 from __future__ import annotations
 
@@ -21,7 +20,7 @@ SEVERITY_COLORS = {
 
 
 def build_report(source_name: str, issues: List[Issue],
-                 timing: BootTiming, summary: dict, health: dict) -> dict:
+                 timing: BootTiming, summary: dict) -> dict:
     """The canonical report dictionary (also the JSON output)."""
     recommendations = []
     for issue in issues:
@@ -41,9 +40,6 @@ def build_report(source_name: str, issues: List[Issue],
             "total_boot_time_seconds": timing.duration,
             "counts_by_severity": summary["counts_by_severity"],
             "counts_by_category": summary["counts_by_category"],
-            "boot_health_score": health["score"],
-            "boot_health_grade": health["grade"],
-            "score_breakdown": health["breakdown"],
         },
         "boot_timing": {
             "duration_seconds": timing.duration,
@@ -76,67 +72,11 @@ def write_json(report: dict, path: str) -> None:
         fh.write("\n")
 
 
-def _timeline_svg(timing: BootTiming, issues: List[Issue]) -> str:
-    """Draw the boot as a horizontal SVG timeline.
-
-    Stages become bars; issues become dots placed at their timestamp. This
-    is the visual heart of the report: one glance shows where time went and
-    where failures clustered.
-    """
-    if not timing.duration or timing.duration <= 0 or not timing.stages:
-        return "<p class='muted'>No boot-stage markers found, so no timeline "
-        "could be drawn for this log.</p>"
-
-    width, height = 960, 120
-    bar_y, bar_h = 46, 26
-    span = timing.duration
-
-    def x(ts: float) -> float:
-        return 90 + (ts / span) * (width - 110)
-
-    parts = [
-        f"<svg viewBox='0 0 {width} {height}' class='timeline' "
-        f"role='img' aria-label='Boot timeline'>"
-    ]
-    for stage in timing.stages:
-        sx, ex = x(stage.start), max(x(stage.end), x(stage.start) + 2)
-        color = "#ff4d5e" if stage.slow else "#a3e635"
-        parts.append(
-            f"<rect x='{sx:.1f}' y='{bar_y}' width='{ex - sx:.1f}' "
-            f"height='{bar_h}' rx='4' fill='{color}' opacity='0.85'>"
-            f"<title>{stage.name}: {stage.duration:.2f}s</title></rect>")
-        label = stage.name.replace("_", " ")
-        if ex - sx > 60:
-            parts.append(
-                f"<text x='{sx + 5:.1f}' y='{bar_y + 17}' class='stage-label'>"
-                f"{html.escape(label)} {stage.duration:.1f}s</text>")
-    for issue in issues:
-        if issue.timestamp is None:
-            continue
-        cx = x(issue.timestamp)
-        color = SEVERITY_COLORS.get(issue.severity, "#ffd447")
-        parts.append(
-            f"<circle cx='{cx:.1f}' cy='{bar_y + bar_h + 18}' r='5' "
-            f"fill='{color}' stroke='#0b0f14' stroke-width='1.5'>"
-            f"<title>[{issue.severity}] {html.escape(issue.category)}: "
-            f"{html.escape(issue.message[:160])}</title></circle>")
-    parts.append(
-        f"<text x='90' y='{bar_y - 10}' class='axis'>0s</text>"
-        f"<text x='{width - 40}' y='{bar_y - 10}' class='axis'>"
-        f"{span:.1f}s</text>")
-    parts.append("</svg>")
-    return "".join(parts)
-
-
 def render_html(report: dict) -> str:
     e = html.escape
     summary = report["summary"]
     sev = summary["counts_by_severity"]
     cat = summary["counts_by_category"]
-    score = summary["boot_health_score"]
-    grade = summary["boot_health_grade"]
-    score_color = ("#a3e635" if score >= 90 else "#ffd447" if score >= 70
-                   else "#ff8c42" if score >= 40 else "#ff4d5e")
 
     cat_rows = "".join(
         f"<tr><td>{e(CATEGORY_LABELS.get(k, k.title()))}</td><td>{v}</td></tr>"
@@ -168,24 +108,8 @@ def render_html(report: dict) -> str:
         f"<td>{'SLOW' if s['slow'] else ''}</td></tr>"
         for s in report["boot_timing"]["stages"])
 
-    breakdown = "; ".join(summary["score_breakdown"]) or "no penalties"
     recs = "".join(f"<li>{e(r)}</li>" for r in report["recommendations"]) or \
         "<li>Nothing to fix based on this log.</li>"
-
-    timing = BootTiming(
-        duration=report["boot_timing"]["duration_seconds"])
-    timing.stages = []
-    from .models import BootStage  # local import to keep top tidy
-    for s in report["boot_timing"]["stages"]:
-        timing.stages.append(BootStage(
-            name=s["name"], start=s["start"], end=s["end"], slow=s["slow"]))
-    from .models import Issue
-    timeline = _timeline_svg(timing, [
-        Issue(severity=i["severity"], category=i["category"],
-              message=i["message"], recommendation=i["recommendation"],
-              timestamp=i["timestamp"], tag=i["tag"],
-              line_number=i["line_number"])
-        for i in report["issues"]])
 
     return f"""<!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
@@ -207,10 +131,6 @@ h2 {{ font-size:18px; margin:34px 0 12px; color:var(--lime); }}
 .card .num {{ font-size:30px; font-weight:700; }}
 .card .lbl {{ color:var(--muted); font-size:12.5px; text-transform:uppercase;
   letter-spacing:.06em; }}
-.timeline {{ width:100%; background:var(--card); border:1px solid var(--line);
-  border-radius:12px; }}
-.stage-label {{ font-size:10.5px; fill:#0b0f14; font-weight:600; }}
-.axis {{ font-size:11px; fill:var(--muted); }}
 table {{ width:100%; border-collapse:collapse; background:var(--card);
   border-radius:12px; overflow:hidden; }}
 th, td {{ text-align:left; padding:9px 14px; border-bottom:1px solid var(--line); }}
@@ -241,14 +161,7 @@ footer {{ margin-top:40px; color:var(--muted); font-size:12.5px; }}
     <div class="lbl">Total boot time</div></div>
   <div class="card"><div class="num">{sev.get('CRITICAL', 0)} / {sev.get('ERROR', 0)} / {sev.get('WARNING', 0)}</div>
     <div class="lbl">Critical / Error / Warning</div></div>
-  <div class="card"><div class="num" style="color:{score_color}">{score}</div>
-    <div class="lbl">Boot Health Score ({e(grade)})</div></div>
 </div>
-<p class="muted" style="margin-top:10px">Score math: start at 100; {e(breakdown)}.</p>
-
-<h2>Boot timeline</h2>
-{timeline}
-<p class="muted">Bars are boot stages (red = slow). Dots under the bar are issues at the moment they fired - hover for details.</p>
 
 {f"<h2>Boot stages</h2><table><tr><th>Stage</th><th>Start</th><th>End</th><th>Duration</th><th></th></tr>{stage_rows}</table>" if stage_rows else ''}
 
