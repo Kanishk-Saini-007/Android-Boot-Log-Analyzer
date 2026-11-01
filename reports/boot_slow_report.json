@@ -59,6 +59,14 @@
         "note": "took 14.5s (35% of boot)"
       },
       {
+        "name": "PackageManager",
+        "start": 5.699,
+        "end": 11.9,
+        "duration": 6.201,
+        "slow": true,
+        "note": "took 6.2s (15% of boot)"
+      },
+      {
         "name": "package_scan_done",
         "start": 19.9,
         "end": 20.3,
@@ -141,6 +149,6 @@
   "recommendations": [
     "Review the log context around this line for the root cause.",
     "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
-    "Investigate slow boot stages: package_scan (14.5s), screen_on (16.2s)"
+    "Investigate slow boot stages: package_scan (14.5s), PackageManager (6.2s), screen_on (16.2s)"
   ]
 }
