@@ -43,14 +43,29 @@ jobs:
           python3 -m bootlog_analyzer real_boot_logcat.log --json real_logcat_report.json --html real_logcat_report.html
           python3 -m bootlog_analyzer real_boot_dmesg.log --json real_dmesg_report.json --html real_dmesg_report.html
 
-      - name: Verify reviewed identifier allowlist (no commit in this run)
+      - name: Scan logs for unreviewed identifiers
         run: |
           set +e
           PATTERN='([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|(^|[^a-z])password([^a-z]|$)|bearer [A-Za-z0-9._-]+'
-          ALLOW='02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:01|ff:ff:ff:ff:ff:ff|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|\.apk@idmap|apex@|@classes\.(dex|vdex)|dalvik-cache'
+          ALLOW='00:00:00:00:00:00|02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:[0-9a-f]{2}|ff:ff:ff:ff:ff:ff|14:15:16:17:18:19|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|@idmap|apex@|@classes\.(dex|vdex)|dalvik-cache|0@(com\.(android|google)\.|android\.)|data@resource-cache@|ACCESS_GOOGLE_PASSWORD|password complexity|synthetic password|password\.is_some\(\)|stringId=password|x-password|DEVICE_IMEI\s+\[PHONE0\]'
           matches=$(grep -nEi "$PATTERN" real_boot_dmesg.log real_boot_logcat.log | grep -vE "$ALLOW")
           count=$(echo -n "$matches" | grep -c .)
           echo "remaining unreviewed matches: $count"
           echo "=== full remaining list ==="
           echo "$matches"
           echo "=== end of remaining list ==="
+          if [ "$count" -ne 0 ]; then
+            echo "Unreviewed identifier-like strings found; refusing to commit logs."
+            exit 1
+          fi
+
+      - name: Commit real logs and reports
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          mkdir -p sample_logs/real_emulator reports
+          cp real_boot_dmesg.log real_boot_logcat.log build_info.txt sample_logs/real_emulator/
+          cp real_logcat_report.json real_logcat_report.html real_dmesg_report.json real_dmesg_report.html reports/
+          git add sample_logs/real_emulator reports
+          git commit -m "Add real emulator boot logs and analyzer reports (API 35 google_apis emulator, collected via ADB)"
+          git push
