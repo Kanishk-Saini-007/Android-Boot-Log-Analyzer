@@ -47,7 +47,7 @@ jobs:
         run: |
           set +e
           PATTERN='([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|(^|[^a-z])password([^a-z]|$)|bearer [A-Za-z0-9._-]+'
-          ALLOW='00:00:00:00:00:00|02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:[0-9a-f]{2}|ff:ff:ff:ff:ff:ff|14:15:16:17:18:19|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|@idmap|apex@|@classes\.(dex|vdex)|dalvik-cache|0@(com\.(android|google)\.|android\.)|data@resource-cache@|ACCESS_GOOGLE_PASSWORD|password complexity|synthetic password|password\.is_some\(\)|stringId=password|x-password|DEVICE_IMEI\s+\[PHONE0\]'
+          ALLOW='00:00:00:00:00:00|02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:[0-9a-f]{2}|ff:ff:ff:ff:ff:ff|--keep-fds=[0-9:]+|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|@idmap|apex@|@classes\.(dex|vdex)|dalvik-cache|0@(com\.(android|google)\.|android\.)|data@resource-cache@|ACCESS_GOOGLE_PASSWORD|password complexity|synthetic password|password\.is_some\(\)|stringId=password|x-password|DEVICE_IMEI\s+\[PHONE0\]'
           matches=$(grep -nEi "$PATTERN" real_boot_dmesg.log real_boot_logcat.log | grep -vE "$ALLOW")
           count=$(echo -n "$matches" | grep -c .)
           echo "remaining unreviewed matches: $count"
