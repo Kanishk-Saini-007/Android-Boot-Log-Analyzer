@@ -3,6 +3,9 @@ name: Collect real emulator boot logs
 on:
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   collect:
     runs-on: ubuntu-latest
@@ -39,6 +42,26 @@ jobs:
         run: |
           python3 -m bootlog_analyzer real_boot_logcat.log --json real_logcat_report.json --html real_logcat_report.html
           python3 -m bootlog_analyzer real_boot_dmesg.log --json real_dmesg_report.json --html real_dmesg_report.html
+
+      - name: Scan logs for identifiers
+        run: |
+          set +e
+          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|imei|serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -v '02:00:00:00:00:00' | grep -v '52:54:00:12:34:56' | head -20)
+          if [ -n "$matches" ]; then
+            echo "POTENTIAL IDENTIFIERS FOUND - refusing to commit:"
+            echo "$matches"
+            exit 1
+          fi
+          echo "identifier scan clean"
+
+      - name: Commit real logs and reports
+        run: |
+          mkdir -p sample_logs/real_emulator
+          cp real_boot_dmesg.log real_boot_logcat.log build_info.txt sample_logs/real_emulator/
+          cp real_logcat_report.html real_logcat_report.json real_dmesg_report.html real_dmesg_report.json reports/
+          git add sample_logs/real_emulator reports/real_logcat_report.html reports/real_logcat_report.json reports/real_dmesg_report.html reports/real_dmesg_report.json
+          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Add real emulator boot logs collected via ADB in CI (identifier scan clean)"
+          git push
 
       - name: Upload logs and reports
         uses: actions/upload-artifact@v4
