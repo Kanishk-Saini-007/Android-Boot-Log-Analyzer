@@ -1,0 +1,55 @@
+name: Collect real emulator boot logs
+
+on:
+  workflow_dispatch:
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Enable KVM
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+
+      - name: Boot emulator and collect boot logs via ADB
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 35
+          target: google_apis
+          arch: x86_64
+          profile: pixel_7_pro
+          script: |
+            date -u > build_info.txt
+            adb shell getprop ro.product.model >> build_info.txt
+            adb shell getprop ro.build.version.release >> build_info.txt
+            adb shell getprop ro.build.fingerprint >> build_info.txt
+            adb root
+            sleep 5
+            adb wait-for-device
+            adb shell dmesg > real_boot_dmesg.log
+            adb logcat -b all -d -v threadtime > real_boot_logcat.log
+            wc -l real_boot_dmesg.log real_boot_logcat.log
+
+      - name: Run analyzer on the real logs
+        run: |
+          python3 -m bootlog_analyzer real_boot_logcat.log --json real_logcat_report.json --html real_logcat_report.html
+          python3 -m bootlog_analyzer real_boot_dmesg.log --json real_dmesg_report.json --html real_dmesg_report.html
+
+      - name: Upload logs and reports
+        uses: actions/upload-artifact@v4
+        with:
+          name: real-emulator-boot-logs
+          retention-days: 5
+          path: |
+            build_info.txt
+            real_boot_dmesg.log
+            real_boot_logcat.log
+            real_logcat_report.json
+            real_logcat_report.html
+            real_dmesg_report.json
+            real_dmesg_report.html
