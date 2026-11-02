@@ -46,7 +46,7 @@ jobs:
       - name: Scan logs for identifiers
         run: |
           set +e
-          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -v '02:00:00:00:00:00' | grep -v '52:54:00:12:34:56' | head -20)
+          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -vE '02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:01|@[0-9]+\.[0-9]+-service|@zx2c4\.com|@redhat\.com' | head -20)
           if [ -n "$matches" ]; then
             echo "POTENTIAL IDENTIFIERS FOUND - refusing to commit:"
             echo "$matches"
@@ -62,17 +62,3 @@ jobs:
           git add sample_logs/real_emulator reports/real_logcat_report.html reports/real_logcat_report.json reports/real_dmesg_report.html reports/real_dmesg_report.json
           git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Add real emulator boot logs collected via ADB in CI (identifier scan clean)"
           git push
-
-      - name: Upload logs and reports
-        uses: actions/upload-artifact@v4
-        with:
-          name: real-emulator-boot-logs
-          retention-days: 5
-          path: |
-            build_info.txt
-            real_boot_dmesg.log
-            real_boot_logcat.log
-            real_logcat_report.json
-            real_logcat_report.html
-            real_dmesg_report.json
-            real_dmesg_report.html
