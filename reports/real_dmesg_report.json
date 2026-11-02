@@ -1,0 +1,1063 @@
+{
+  "tool": "android-boot-log-analyzer",
+  "input": "real_boot_dmesg.log",
+  "summary": {
+    "issues_detected": 87,
+    "total_boot_time_seconds": 31.123,
+    "counts_by_severity": {
+      "CRITICAL": 0,
+      "ERROR": 86,
+      "WARNING": 1
+    },
+    "counts_by_category": {
+      "kernel": 51,
+      "selinux": 23,
+      "driver": 13
+    }
+  },
+  "boot_timing": {
+    "duration_seconds": 31.123,
+    "note": "",
+    "stages": [
+      {
+        "name": "service apexd",
+        "start": -1.584,
+        "end": 22.643759,
+        "duration": 24.228,
+        "slow": true,
+        "note": "took 24.2s (78% of boot)"
+      },
+      {
+        "name": "timed action",
+        "start": 0.005,
+        "end": 0.184696,
+        "duration": 0.18,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service apexd-snapshotde",
+        "start": 0.187,
+        "end": 0.200467,
+        "duration": 0.013,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service qemu-device-state",
+        "start": 0.212,
+        "end": 0.220345,
+        "duration": 0.008,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service ranchu-adb-setup",
+        "start": 0.217,
+        "end": 0.228344,
+        "duration": 0.011,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service ranchu-net",
+        "start": 0.227,
+        "end": 0.257254,
+        "duration": 0.03,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 11 (/system/bin/clean_scratch_files)",
+        "start": 0.238,
+        "end": 0.261499,
+        "duration": 0.023,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 12 (/system/bin/otapreopt_slot)",
+        "start": 0.253,
+        "end": 0.266408,
+        "duration": 0.013,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 13 (/system/bin/recovery-persist)",
+        "start": 0.288,
+        "end": 0.291595,
+        "duration": 0.004,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service bpfloader",
+        "start": 0.303,
+        "end": 0.649411,
+        "duration": 0.346,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "zygote_start",
+        "start": 0.653369,
+        "end": 1.4267,
+        "duration": 0.773,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service update_verifier",
+        "start": 0.658,
+        "end": 0.666038,
+        "duration": 0.008,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 14 (/system/bin/kcmdlinectrl update-props)",
+        "start": 0.704,
+        "end": 0.707393,
+        "duration": 0.003,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service misctrl",
+        "start": 1.049,
+        "end": 1.078063,
+        "duration": 0.029,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 15 (/system/bin/gsid run-startup-tasks)",
+        "start": 1.104,
+        "end": 1.136087,
+        "duration": 0.032,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 16 (/system/bin/profcollectctl reset)",
+        "start": 1.114,
+        "end": 1.290357,
+        "duration": 0.176,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service boringssl_self_test_apex64",
+        "start": 1.232,
+        "end": 1.26094,
+        "duration": 0.029,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 17 (/system/bin/bootstat --set_system_boot_reason)",
+        "start": 1.354,
+        "end": 1.415354,
+        "duration": 0.061,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "boot_animation",
+        "start": 1.4267,
+        "end": 16.990894,
+        "duration": 15.564,
+        "slow": true,
+        "note": "took 15.6s (50% of boot)"
+      },
+      {
+        "name": "service bootanim",
+        "start": 1.43,
+        "end": 1.843053,
+        "duration": 0.413,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service usbd",
+        "start": 1.697,
+        "end": 1.798288,
+        "duration": 0.101,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 18 (/system/bin/flags_health_check BOOT_FAILURE)",
+        "start": 1.82,
+        "end": 1.859577,
+        "duration": 0.04,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 19 (/system/bin/extra_free_kbytes.sh 52650)",
+        "start": 9.167,
+        "end": 9.267005,
+        "duration": 0.1,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "boot_complete",
+        "start": 16.990894,
+        "end": 31.122713,
+        "duration": 14.132,
+        "slow": true,
+        "note": "took 14.1s (45% of boot)"
+      },
+      {
+        "name": "service exec 20 (/bin/rm -rf /data/per_boot)",
+        "start": 16.996,
+        "end": 17.051252,
+        "duration": 0.055,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 21 (/system/bin/bootstat --record_boot_complete --record_boot_reason --record_time_since_factory_reset -l)",
+        "start": 17.09,
+        "end": 17.136989,
+        "duration": 0.047,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service exec 22 (/system/bin/lmkd --boot_completed)",
+        "start": 17.119,
+        "end": 17.146592,
+        "duration": 0.028,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service logd-auditctl",
+        "start": 17.162,
+        "end": 17.17007,
+        "duration": 0.008,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service qemu-props-bootcomplete",
+        "start": 17.246,
+        "end": 17.304993,
+        "duration": 0.059,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service ranchu-setup",
+        "start": 17.274,
+        "end": 17.314811,
+        "duration": 0.041,
+        "slow": false,
+        "note": ""
+      },
+      {
+        "name": "service dmesgd",
+        "start": 17.378,
+        "end": 17.451099,
+        "duration": 0.073,
+        "slow": false,
+        "note": ""
+      }
+    ]
+  },
+  "issues": [
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "libprocessgroup: Failed to write 1 to /sys/fs/cgroup/uid_0/pid_334/cgroup.kill: No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.197374,
+      "tag": "",
+      "line_number": 16
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "libprocessgroup: Failed to open /sys/fs/cgroup/uid_0/pid_334/cgroup.procs: No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.198907,
+      "tag": "",
+      "line_number": 17
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /data/dalvik-cache/arm: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.27105,
+      "tag": "",
+      "line_number": 62
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /data/dalvik-cache/arm64: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.27248,
+      "tag": "",
+      "line_number": 63
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /data/dalvik-cache/riscv64: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.273855,
+      "tag": "",
+      "line_number": 64
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /data/dalvik-cache/x86: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.275268,
+      "tag": "",
+      "line_number": 65
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /data/dalvik-cache/x86_64: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.27676,
+      "tag": "",
+      "line_number": 66
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'rm /data/misc/perfetto-traces/.guardraildata' action=post-fs-data (/system/etc/init/perfetto.rc:77) took 0ms and failed: unlink() failed: No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.279538,
+      "tag": "",
+      "line_number": 68
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_downstream6_ether) returned fd: 14 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.354833,
+      "tag": "",
+      "line_number": 132
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_upstream6_ether) returned fd: 15 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.357317,
+      "tag": "",
+      "line_number": 136
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_downstream6_rawip$4_14) returned fd: 16 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.359485,
+      "tag": "",
+      "line_number": 140
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_upstream6_rawip$4_14) returned fd: 17 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.361802,
+      "tag": "",
+      "line_number": 144
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_downstream4_rawip$5_8) returned fd: 18 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.364476,
+      "tag": "",
+      "line_number": 150
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_upstream4_rawip$5_8) returned fd: 19 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.367121,
+      "tag": "",
+      "line_number": 154
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_downstream4_ether$5_8) returned fd: 20 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.370091,
+      "tag": "",
+      "line_number": 158
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (schedcls_tether_upstream4_ether$5_8) returned fd: 21 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.372853,
+      "tag": "",
+      "line_number": 162
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (xdp_tether_downstream_ether) returned fd: 22 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.374475,
+      "tag": "",
+      "line_number": 180
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (xdp_tether_downstream_rawip) returned fd: 23 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.376669,
+      "tag": "",
+      "line_number": 184
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (xdp_tether_upstream_ether) returned fd: 24 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.378243,
+      "tag": "",
+      "line_number": 188
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/offload@mainline.o (xdp_tether_upstream_rawip) returned fd: 25 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.379801,
+      "tag": "",
+      "line_number": 192
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/test@mainline.o (xdp_drop_ipv4_udp_ether) returned fd: 9 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.392864,
+      "tag": "",
+      "line_number": 213
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (cgroupskb_ingress_stats$trace) returned fd: 21 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.454828,
+      "tag": "",
+      "line_number": 275
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: New bpf prog load reusing prog /sys/fs/bpf/netd_shared/prog_netd_cgroupskb_ingress_stats, ret: 22 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.458553,
+      "tag": "",
+      "line_number": 280
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (cgroupskb_egress_stats$trace) returned fd: 23 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.463839,
+      "tag": "",
+      "line_number": 289
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: New bpf prog load reusing prog /sys/fs/bpf/netd_shared/prog_netd_cgroupskb_egress_stats, ret: 24 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.467273,
+      "tag": "",
+      "line_number": 294
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (skfilter_egress_xtbpf) returned fd: 25 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.468948,
+      "tag": "",
+      "line_number": 299
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (skfilter_ingress_xtbpf) returned fd: 27 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.470506,
+      "tag": "",
+      "line_number": 303
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (schedact_ingress_account) returned fd: 28 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.47415,
+      "tag": "",
+      "line_number": 308
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (skfilter_allowlist_xtbpf) returned fd: 29 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.475746,
+      "tag": "",
+      "line_number": 312
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (skfilter_denylist_xtbpf) returned fd: 30 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.477412,
+      "tag": "",
+      "line_number": 316
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (cgroupsock_inet_create) returned fd: 31 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.481001,
+      "tag": "",
+      "line_number": 321
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (cgroupsockrelease_inet_release) returned fd: 32 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.484665,
+      "tag": "",
+      "line_number": 326
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (connect4_inet4_connect) returned fd: 33 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.48839,
+      "tag": "",
+      "line_number": 331
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (connect6_inet6_connect) returned fd: 34 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.491949,
+      "tag": "",
+      "line_number": 336
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (recvmsg4_udp4_recvmsg) returned fd: 35 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.495476,
+      "tag": "",
+      "line_number": 341
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (recvmsg6_udp6_recvmsg) returned fd: 36 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.499094,
+      "tag": "",
+      "line_number": 346
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (sendmsg4_udp4_sendmsg) returned fd: 37 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.502629,
+      "tag": "",
+      "line_number": 351
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (sendmsg6_udp6_sendmsg) returned fd: 38 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.506154,
+      "tag": "",
+      "line_number": 356
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (getsockopt_prog) returned fd: 39 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.509619,
+      "tag": "",
+      "line_number": 361
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/netd_shared/netd.o (setsockopt_prog) returned fd: 40 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.513035,
+      "tag": "",
+      "line_number": 366
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/gentle.o (skfilter_accept) returned fd: 6 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.522466,
+      "tag": "",
+      "line_number": 381
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/dscpPolicy.o (schedcls_set_dscp_ether) returned fd: 8 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.579753,
+      "tag": "",
+      "line_number": 400
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/block.o (bind4_block_port) returned fd: 6 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.592235,
+      "tag": "",
+      "line_number": 416
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/block.o (bind6_block_port) returned fd: 7 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.595404,
+      "tag": "",
+      "line_number": 421
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/clatd.o (schedcls_ingress6_clat_ether$4_14) returned fd: 7 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.609232,
+      "tag": "",
+      "line_number": 438
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/clatd.o (schedcls_ingress6_clat_rawip$4_14) returned fd: 8 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.611631,
+      "tag": "",
+      "line_number": 443
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "NetBpfLoad: BPF_PROG_LOAD call for /apex/com.android.tethering/etc/bpf/net_shared/clatd.o (schedcls_egress4_clat_rawip) returned fd: 9 (no error)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.613635,
+      "tag": "",
+      "line_number": 448
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'start zygote_secondary' action=zygote-start (/system/etc/init/hw/init.rc:1099) took 0ms and failed: service zygote_secondary not found",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.686078,
+      "tag": "",
+      "line_number": 527
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'symlink /sys/fs/f2fs/${dev.mnt.dev.data} /dev/sys/fs/by-name/userdata' action=boot (/system/etc/init/hw/init.rc:1132) took 0ms and failed: property 'dev.mnt.dev.data' doesn't exist while expanding '/sys/fs/f2fs/${dev.mnt.dev.data}'",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.712236,
+      "tag": "",
+      "line_number": 538
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'symlink /sys/class/block/${dev.mnt.dev.data} /dev/sys/block/by-name/userdata' action=boot (/system/etc/init/hw/init.rc:1137) took 0ms and failed: property 'dev.mnt.dev.data' doesn't exist while expanding '/sys/class/block/${dev.mnt.dev.data}'",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.71619,
+      "tag": "",
+      "line_number": 539
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'symlink /sys/class/block/${dev.mnt.rootdisk.data} /dev/sys/block/by-name/rootdisk' action=boot (/system/etc/init/hw/init.rc:1138) took 0ms and failed: property 'dev.mnt.rootdisk.data' doesn't exist while expanding '/sys/class/block/${dev.mnt.rootdisk.data}'",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 0.719941,
+      "tag": "",
+      "line_number": 540
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux:  Could not stat /sys/devices/virtual/net/ipsec_test: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 0.750277,
+      "tag": "",
+      "line_number": 547
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Could not create socket 'pdx/system/vr/display/client': Failed to bind socket 'pdx/system/vr/display/client': No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 1.053778,
+      "tag": "",
+      "line_number": 653
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Could not create socket 'pdx/system/vr/display/manager': Failed to bind socket 'pdx/system/vr/display/manager': No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 1.056736,
+      "tag": "",
+      "line_number": 654
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Could not create socket 'pdx/system/vr/display/vsync': Failed to bind socket 'pdx/system/vr/display/vsync': No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 1.059753,
+      "tag": "",
+      "line_number": 655
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608566.920:5): avc:  denied  { write } for  comm=\"init\" name=\"error_report_end\" dev=\"tracefs\" ino=7361 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_bootreceiver_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.131877,
+      "tag": "",
+      "line_number": 675
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "init: Command 'write /sys/class/android_usb/android0/enable 0' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:42) took 0ms and failed: Unable to write to file '/sys/class/android_usb/android0/enable': open() failed: Permission denied",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.147471,
+      "tag": "",
+      "line_number": 681
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "init: Command 'write /sys/class/android_usb/android0/idVendor 18d1' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:43) took 0ms and failed: Unable to write to file '/sys/class/android_usb/android0/idVendor': open() failed: Permission denied",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.152292,
+      "tag": "",
+      "line_number": 682
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "init: Command 'write /sys/class/android_usb/android0/idProduct 4EE7' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:44) took 0ms and failed: Unable to write to file '/sys/class/android_usb/android0/idProduct': open() failed: Permission denied",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.159487,
+      "tag": "",
+      "line_number": 683
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "init: Command 'write /sys/class/android_usb/android0/functions ${sys.usb.config}' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:45) took 0ms and failed: Unable to write to file '/sys/class/android_usb/android0/functions': open() failed: Permission denied",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.167903,
+      "tag": "",
+      "line_number": 684
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "init: Command 'write /sys/class/android_usb/android0/enable 1' action=sys.usb.config=adb && sys.usb.configfs=0 (/system/etc/init/hw/init.usb.rc:46) took 0ms and failed: Unable to write to file '/sys/class/android_usb/android0/enable': open() failed: Permission denied",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 1.172204,
+      "tag": "",
+      "line_number": 685
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "init: Command 'start vendor.audio-hal-aidl' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:39) took 0ms and failed: service vendor.audio-hal-aidl not found",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 1.326946,
+      "tag": "",
+      "line_number": 713
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "init: Command 'start vendor.audio-effect-hal-aidl' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:40) took 0ms and failed: service vendor.audio-effect-hal-aidl not found",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 1.330208,
+      "tag": "",
+      "line_number": 714
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "init: Command 'start vendor.audio-hal-4-0-msd' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:41) took 0ms and failed: service vendor.audio-hal-4-0-msd not found",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 1.336766,
+      "tag": "",
+      "line_number": 716
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "init: Command 'start audio_proxy_service' action=init.svc.audioserver=running (/system/etc/init/audioserver.rc:42) took 0ms and failed: service audio_proxy_service not found",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 1.339671,
+      "tag": "",
+      "line_number": 717
+    },
+    {
+      "severity": "ERROR",
+      "category": "kernel",
+      "message": "init: Command 'rm /data/misc/dmesgd/sent_reports.txt' action=bootreceiver.enable=1 && ro.product.cpu.abilist64=* (/system/etc/init/dmesgd.rc:9) took 0ms and failed: unlink() failed: No such file or directory",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 1.35884,
+      "tag": "",
+      "line_number": 725
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "init: Could not open file '/d/mmc0/mmc0:0001/ext_csd': Failed to open file '/d/mmc0/mmc0:0001/ext_csd': No such file or directory",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 1.559755,
+      "tag": "",
+      "line_number": 780
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 2.08626,
+      "tag": "",
+      "line_number": 864
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 3.098942,
+      "tag": "",
+      "line_number": 867
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 4.1028,
+      "tag": "",
+      "line_number": 881
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 5.119372,
+      "tag": "",
+      "line_number": 884
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 6.127389,
+      "tag": "",
+      "line_number": 887
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 7.137474,
+      "tag": "",
+      "line_number": 890
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service activity as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 8.1429,
+      "tag": "",
+      "line_number": 896
+    },
+    {
+      "severity": "ERROR",
+      "category": "driver",
+      "message": "servicemanager: Caller(pid=425,uid=1041,sid=u:r:audioserver:s0) Tried to start aidl service sensor_privacy as a lazy service, but was unable to. Usually this happens when a service is not installed, but if the service is intended to be used as a lazy service, then it may be configured incorrectly.",
+      "recommendation": "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+      "timestamp": 8.722599,
+      "tag": "",
+      "line_number": 900
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "selinux: SELinux: Could not get canonical path for /sys/kernel/debug/tracing/instances/wifi restorecon: No such file or directory.",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.165227,
+      "tag": "",
+      "line_number": 1046
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:9): avc:  denied  { write } for  comm=\"init\" name=\"cfg80211_gtk_rekey_notify\" dev=\"tracefs\" ino=16495 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.199403,
+      "tag": "",
+      "line_number": 1050
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:10): avc:  denied  { write } for  comm=\"init\" name=\"rdev_add_key\" dev=\"tracefs\" ino=16498 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.202548,
+      "tag": "",
+      "line_number": 1051
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:11): avc:  denied  { write } for  comm=\"init\" name=\"rdev_assoc\" dev=\"tracefs\" ino=16501 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.210074,
+      "tag": "",
+      "line_number": 1052
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:12): avc:  denied  { write } for  comm=\"init\" name=\"rdev_auth\" dev=\"tracefs\" ino=16504 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.218585,
+      "tag": "",
+      "line_number": 1053
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:13): avc:  denied  { write } for  comm=\"init\" name=\"rdev_connect\" dev=\"tracefs\" ino=16507 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.225718,
+      "tag": "",
+      "line_number": 1054
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:14): avc:  denied  { write } for  comm=\"init\" name=\"rdev_set_default_key\" dev=\"tracefs\" ino=16510 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.237364,
+      "tag": "",
+      "line_number": 1058
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:15): avc:  denied  { write } for  comm=\"init\" name=\"rdev_set_default_mgmt_key\" dev=\"tracefs\" ino=16513 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.245218,
+      "tag": "",
+      "line_number": 1060
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:16): avc:  denied  { write } for  comm=\"init\" name=\"rdev_set_rekey_data\" dev=\"tracefs\" ino=16516 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.250966,
+      "tag": "",
+      "line_number": 1061
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608582.984:17): avc:  denied  { write } for  comm=\"init\" name=\"net\" dev=\"tracefs\" ino=16519 scontext=u:r:init:s0 tcontext=u:object_r:debugfs_wifi_tracing:s0 tclass=dir permissive=0",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 17.267536,
+      "tag": "",
+      "line_number": 1064
+    },
+    {
+      "severity": "WARNING",
+      "category": "kernel",
+      "message": "capability: warning: `wpa_supplicant' uses 32-bit capabilities (legacy support in use)",
+      "recommendation": "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+      "timestamp": 19.060896,
+      "tag": "",
+      "line_number": 1096
+    },
+    {
+      "severity": "ERROR",
+      "category": "selinux",
+      "message": "type=1400 audit(1793608593.328:25): avc:  denied  { read } for  comm=424720546872656164202332 name=\"/\" dev=\"vdd1\" ino=2 scontext=u:r:priv_app:s0:c512,c768 tcontext=u:object_r:metadata_file:s0 tclass=dir permissive=0 app=com.google.android.googlequicksearchbox",
+      "recommendation": "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+      "timestamp": 27.536888,
+      "tag": "",
+      "line_number": 1143
+    }
+  ],
+  "recommendations": [
+    "Investigate the kernel error: check recent kernel, config or hardware changes and capture a full dmesg around the failure.",
+    "Review SELinux permission rules: audit the denial and update sepolicy instead of disabling enforcement.",
+    "Investigate driver initialization failure: check the device tree, power/clock configuration and probe order for this peripheral.",
+    "Investigate slow boot stages: service apexd (24.2s), boot_animation (15.6s), boot_complete (14.1s)"
+  ]
+}
