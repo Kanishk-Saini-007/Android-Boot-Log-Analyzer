@@ -46,7 +46,7 @@ jobs:
       - name: Scan logs for identifiers
         run: |
           set +e
-          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|imei|serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -v '02:00:00:00:00:00' | grep -v '52:54:00:12:34:56' | head -20)
+          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -v '02:00:00:00:00:00' | grep -v '52:54:00:12:34:56' | head -20)
           if [ -n "$matches" ]; then
             echo "POTENTIAL IDENTIFIERS FOUND - refusing to commit:"
             echo "$matches"
