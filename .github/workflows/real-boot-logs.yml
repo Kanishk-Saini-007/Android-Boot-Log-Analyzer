@@ -13,6 +13,20 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
       - name: Enable KVM
         run: |
           echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
@@ -43,22 +57,15 @@ jobs:
           python3 -m bootlog_analyzer real_boot_logcat.log --json real_logcat_report.json --html real_logcat_report.html
           python3 -m bootlog_analyzer real_boot_dmesg.log --json real_dmesg_report.json --html real_dmesg_report.html
 
-      - name: Scan logs for identifiers
+      - name: Full identifier-candidate review (no commit in this run)
         run: |
           set +e
-          matches=$(grep -nEi '([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|password|bearer [A-Za-z0-9._-]+' real_boot_dmesg.log real_boot_logcat.log | grep -vE '02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:01|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|\.apk@idmap' | head -20)
-          if [ -n "$matches" ]; then
-            echo "POTENTIAL IDENTIFIERS FOUND - refusing to commit:"
-            echo "$matches"
-            exit 1
-          fi
-          echo "identifier scan clean"
-
-      - name: Commit real logs and reports
-        run: |
-          mkdir -p sample_logs/real_emulator
-          cp real_boot_dmesg.log real_boot_logcat.log build_info.txt sample_logs/real_emulator/
-          cp real_logcat_report.html real_logcat_report.json real_dmesg_report.html real_dmesg_report.json reports/
-          git add sample_logs/real_emulator reports/real_logcat_report.html reports/real_logcat_report.json reports/real_dmesg_report.html reports/real_dmesg_report.json
-          git -c user.name="github-actions[bot]" -c user.email="41898282+github-actions[bot]@users.noreply.github.com" commit -m "Add real emulator boot logs collected via ADB in CI (identifier scan clean)"
-          git push
+          PATTERN='([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|imei|serialno|password|bearer [A-Za-z0-9._-]+'
+          echo "=== unfiltered candidate counts per file ==="
+          grep -cEi "$PATTERN" real_boot_dmesg.log || true
+          grep -cEi "$PATTERN" real_boot_logcat.log || true
+          echo "=== distinct matched strings (sorted, counts) ==="
+          grep -oiE "$PATTERN" real_boot_dmesg.log real_boot_logcat.log | sed 's/^[^:]*://' | tr 'A-Z' 'a-z' | sort | uniq -c | sort -rn || true
+          echo "=== full match list with line numbers ==="
+          grep -nEi "$PATTERN" real_boot_dmesg.log real_boot_logcat.log || true
+          echo "=== review run ends here; no commit step ==="
