@@ -121,6 +121,36 @@ illustrative, not measurements of a real device.
 | `boot_slow.log` | logcat | 42s boot with a 14.5s package scan and other slow stages |
 | `boot_healthy.log` | logcat | Clean 9s boot with no detected issues |
 
+## Real emulator logs
+
+The files in [`sample_logs/real_emulator/`](sample_logs/real_emulator/) are
+**real boot logs**, collected from an Android emulator running in GitHub
+Actions - not from a physical phone, and not written by hand.
+
+How they were collected (2 November 2026, UTC):
+
+- Emulator: `sdk_gphone64_x86_64`, Android 15 (API 35), `google_apis`
+  x86_64 system image, Pixel 7 Pro profile, booted with
+  [android-emulator-runner](https://github.com/ReactiveCircus/android-emulator-runner)
+- Commands, run right after boot finished:
+  `adb shell dmesg > real_boot_dmesg.log` and
+  `adb logcat -b all -d -v threadtime > real_boot_logcat.log`
+- The workflow in
+  [`.github/workflows/real-boot-logs.yml`](.github/workflows/real-boot-logs.yml)
+  boots the emulator, saves the logs, runs the analyzer on them and commits
+  the results. Before committing it scans both logs for identifier-looking
+  strings (MAC addresses, emails, IMEI/serial/password-like text) and
+  refuses to commit if anything unreviewed appears.
+
+The matching analyzer reports are
+[`reports/real_logcat_report.html`](reports/real_logcat_report.html) /
+[`.json`](reports/real_logcat_report.json) and
+[`reports/real_dmesg_report.html`](reports/real_dmesg_report.html) /
+[`.json`](reports/real_dmesg_report.json).
+A fresh emulator's first boot logs a lot of expected noise (first-time
+service starts, dex2oat compiling apps), so the issue counts are higher
+than on a settled device.
+
 ## How it works
 
 The analyzer mirrors the real Android boot sequence
@@ -153,6 +183,7 @@ bootlog_analyzer/
   report.py       # HTML + JSON report generation
   cli.py          # command line interface
 sample_logs/      # synthetic logs with known failures (see table above)
+  real_emulator/  # real logs collected via ADB from a CI emulator
 reports/          # generated sample reports (HTML + JSON)
 tests/            # 25 pytest tests covering every module
 ```
@@ -183,8 +214,9 @@ on every push.
   is not a substitute for reading the log yourself on a hard bug.
 - Boot stage timing needs the standard markers; vendor logs that strip
   them still get total-elapsed timing but no per-stage breakdown.
-- The sample logs are synthetic. Real logs from your own device or the
-  emulator are the best test - pull them with ADB and run the tool.
+- The four logs in `sample_logs/` are synthetic; the real emulator logs
+  in `sample_logs/real_emulator/` are from a first boot of a stock
+  emulator image, which is noisier than a real daily-use device.
 
 ## Learning resources
 
