@@ -43,15 +43,14 @@ jobs:
           python3 -m bootlog_analyzer real_boot_logcat.log --json real_logcat_report.json --html real_logcat_report.html
           python3 -m bootlog_analyzer real_boot_dmesg.log --json real_dmesg_report.json --html real_dmesg_report.html
 
-      - name: Full identifier-candidate review (no commit in this run)
+      - name: Verify reviewed identifier allowlist (no commit in this run)
         run: |
           set +e
-          PATTERN='([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|imei|serialno|password|bearer [A-Za-z0-9._-]+'
-          echo "=== unfiltered candidate counts per file ==="
-          grep -cEi "$PATTERN" real_boot_dmesg.log || true
-          grep -cEi "$PATTERN" real_boot_logcat.log || true
-          echo "=== distinct matched strings (sorted, counts) ==="
-          grep -oiE "$PATTERN" real_boot_dmesg.log real_boot_logcat.log | sed 's/^[^:]*://' | tr 'A-Z' 'a-z' | sort | uniq -c | sort -rn || true
-          echo "=== full match list with line numbers ==="
-          grep -nEi "$PATTERN" real_boot_dmesg.log real_boot_logcat.log || true
-          echo "=== review run ends here; no commit step ==="
+          PATTERN='([0-9a-f]{2}:){5}[0-9a-f]{2}|[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}|(^|[^a-z])imei([^a-z]|$)|(^|[^a-z])serialno|(^|[^a-z])password([^a-z]|$)|bearer [A-Za-z0-9._-]+'
+          ALLOW='02:00:00:00:00:00|52:54:00:12:34:56|02:15:b2:00:00:01|ff:ff:ff:ff:ff:ff|@[0-9]+\.[0-9]+-(service|impl)|@zx2c4\.com|@redhat\.com|com\.(android|google)\.[a-z0-9.]+@[0-9]+|hardware\.[a-z0-9.]+@[0-9]|@overlay@|\.apk@idmap|apex@|@classes\.(dex|vdex)|dalvik-cache'
+          matches=$(grep -nEi "$PATTERN" real_boot_dmesg.log real_boot_logcat.log | grep -vE "$ALLOW")
+          count=$(echo -n "$matches" | grep -c .)
+          echo "remaining unreviewed matches: $count"
+          echo "=== full remaining list ==="
+          echo "$matches"
+          echo "=== end of remaining list ==="
