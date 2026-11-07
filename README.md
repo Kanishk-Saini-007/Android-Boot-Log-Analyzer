@@ -12,7 +12,7 @@ in the report can be traced back to a line in the log.
 
 The analyzer also runs as a web page - no install, and your logs are never
 uploaded anywhere:
-**<https://kanishk-saini-007.github.io/android-boot-log-analyzer/>**
+**<https://kanishk-saini-007.github.io/Android-Boot-Log-Analyzer/>**
 
 Paste or load your own `dmesg`/`logcat` output, analyze it, and download the
 same HTML/JSON reports the CLI writes. The page (`docs/index.html`, served
